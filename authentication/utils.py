@@ -15,7 +15,7 @@ def send_otp_code_telegram(otp_obj):
     requests.get(TELEGRAMBOT_URL.format(BOT_ID, message, CHAT_ID))
 
 
-def generate_code():
+def generate_otp_code():
     return random.randint(10000, 99999)
 
 
