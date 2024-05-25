@@ -43,4 +43,3 @@ class ChoiceOTP(models.Model):
 
 
 
-
