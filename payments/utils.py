@@ -19,5 +19,5 @@ def watch_movie(user_id, movie_id):
 
     elif subscription.status == status:
         return True
-
-    return False
+    else:
+        return False
