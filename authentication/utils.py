@@ -11,7 +11,7 @@ TELEGRAMBOT_URL = "https://api.telegram.org/bot{}/sendMessage?text={}&chat_id={}
 def send_otp_code_telegram(otp_obj):
     message = (f"Project: UzMovie\n PhoneNumber: {otp_obj.user}\n "
                f"code: {otp_obj.otp_code}\n key: {otp_obj.otp_key}\n "
-               f" code_type: {otp_obj.type}, sender: UzMOVIE")
+               f" code_type: {otp_obj.type}, sender: UzMOVIE")  ## code type for what kind of otp code is sending (register, resend, reset, payment)
     requests.get(TELEGRAMBOT_URL.format(BOT_ID, message, CHAT_ID))
 
 
