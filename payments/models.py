@@ -8,7 +8,6 @@ from payments.utils import validate_pan, validate_expire_month, validate_expire_
 # active/expired/canceled
 
 
-
 class Status(models.Model):
     name = models.CharField(max_length=50)
 
