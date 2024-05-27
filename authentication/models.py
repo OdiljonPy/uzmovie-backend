@@ -22,7 +22,7 @@ class User(AbstractUser):
 
 class OTP_code_save(models.Model):
     otp = models.IntegerField(unique=True)
-    username = models.ForeignKey(User.username, on_delete=models.CASCADE, default=None, null=True, blank=True)
+    username = models.ForeignKey(User, on_delete=models.CASCADE, default=None, null=True, blank=True)
     otp_key = models.UUIDField(unique=True, default=uuid.uuid4, editable=False)
 
     created_at = models.DateTimeField(auto_now_add=True)
