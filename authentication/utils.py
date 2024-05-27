@@ -47,3 +47,9 @@ def checking_numberOfOTPs(checking):
     return True
 
 
+def check_resend_otp_code(updated_at):
+    current_time = datetime.now()
+    allowed_minut = timedelta(minutes=1)
+    if current_time - updated_at < allowed_minut:
+        return False
+    return True

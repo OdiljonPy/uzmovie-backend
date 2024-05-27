@@ -5,7 +5,8 @@ from .models import User, OTPRegisterResend
 from .serializers import (UserSerializer, UserRequestSerializer, LoginSerializer,
                           OTPRegisterResendSerializer, OTPRegisterResendRequestSerializer)
 from drf_yasg.utils import swagger_auto_schema
-from .utils import check_code_expire, checking_numberOfOTPs, send_otp_code_telegram
+from .utils import (check_code_expire, checking_numberOfOTPs,
+                    send_otp_code_telegram, generate_otp_code, check_resend_otp_code)
 from rest_framework_simplejwt.views import TokenObtainPairView
 
 
@@ -76,6 +77,23 @@ class ResendAndResetViewSet(ViewSet):
     def verify_reset_password(self, request, *args, **kwargs):
         pass
 
+    swagger_auto_schema(
+        operation_description="Verifying registration",
+        operation_summary="Verify registered user",
+        responses={200: OTPRegisterResendSerializer()},
+        tags=['auth']
+
+    )
+
     def resend_otp_code(self, request, *args, **kwargs):
-        pass
+        otp_key = request.GET.get('otp_key')
+        otp_obj = OTPRegisterResend.objects.filter(otp_key=otp_key).first()
+        if otp_obj:
+            if not check_resend_otp_code(otp_obj.updated_at):
+                return Response(data={"error": "Try again a minute later"}, status=status.HTTP_400_BAD_REQUEST)
+            otp_obj.otp_code = generate_otp_code()
+            otp_obj.save(updated_fields=['otp_code'])
+            send_otp_code_telegram(otp_obj)
+            return Response(data={"otp_key": otp_obj.otp_key}, status=status.HTTP_200_OK)
+        return Response(data={"error": "Otp key is wrong"}, status=status.HTTP_404_NOT_FOUND)
 
