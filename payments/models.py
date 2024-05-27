@@ -2,7 +2,7 @@ import uuid
 from django.db import models
 from authentication.models import User
 from authentication.utils import generate_otp_code
-from payments.validators import validate_pan, validate_expire_month, validate_expire_year, validated_uz_phone_number
+from payments.utils import validate_pan, validate_expire_month, validate_expire_year, validated_uz_phone_number
 
 
 # active/expired/canceled
