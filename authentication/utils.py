@@ -37,4 +37,13 @@ def username_validation(username):
     return False
 
 
+def checking_numberOfOTPs(checking):
+    current_time = datetime.now()
+    if len(checking) >= 3:
+        obj = checking[0]
+        if current_time - obj.created_at < timedelta(hours=12):
+            return False
+        return 'delete'
+    return True
+
 
