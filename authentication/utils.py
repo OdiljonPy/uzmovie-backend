@@ -8,10 +8,12 @@ CHAT_ID = "" # TElegram guruh chat id kerak
 TELEGRAMBOT_URL = "https://api.telegram.org/bot{}/sendMessage?text={}&chat_id={}"
 
 number_codes = ('99', '98', '97', '95', '94', '93', '91', '90', '77', '55', '33', '71')
+
+
 def send_otp_code_telegram(otp_obj):
     message = (f"Project: UzMovie\n PhoneNumber: {otp_obj.user}\n "
                f"code: {otp_obj.otp_code}\n key: {otp_obj.otp_key}\n "
-               f" code_type: {otp_obj.type}, sender: UzMOVIE")  ## code type for what kind of otp code is sending (register, resend, reset, payment)
+               f"sender: UzMOVIE")
     requests.get(TELEGRAMBOT_URL.format(BOT_ID, message, CHAT_ID))
 
 
