@@ -1,9 +1,10 @@
 from rest_framework.response import Response
 from rest_framework.viewsets import ViewSet
-from .models import Movie, Actor, Director, Genre
+from .models import Movie, Actor, Director, Genre, Saved
 from rest_framework import status
 from .serializers import MovieSerializer
 from rest_framework.permissions import IsAuthenticated
+from authentication.models import User
 
 
 class MovieViewSet(ViewSet):
@@ -79,3 +80,28 @@ class MovieViewSet(ViewSet):
                 return Response({'error': 'Genre not found'}, status=status.HTTP_404_NOT_FOUND)
         else:
             return Response({'error': 'Genre parameter is required'}, status=status.HTTP_400_BAD_REQUEST)
+
+
+class SavedViewSet(ViewSet):
+    permission_classes = [IsAuthenticated]
+
+    def save_movie(self, request, *args, **kwargs):
+        if not request.user.is_authenticated:
+            return Response(
+                status=status.HTTP_401_UNAUTHORIZED,
+                data={'detail': 'Not authenticated'},
+            )
+        my_user = User.objects.filter(id=request.user.id).first()
+        save = Saved.objects.filter(user_id=my_user.id, movie_id=kwargs['pk']).first()
+        if save is None:
+            save = Saved.objects.create(user_id=my_user.id, movie_id=kwargs['pk'])
+            save.save()
+            return Response(
+                status=status.HTTP_201_CREATED,
+                data={'message': 'Movie saved'}
+            )
+        save.delete()
+        return Response(
+            status=status.HTTP_204_NO_CONTENT,
+            data={'message': 'Movie deleted'}
+        )
