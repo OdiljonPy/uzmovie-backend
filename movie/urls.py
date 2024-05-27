@@ -15,6 +15,7 @@ urlpatterns = [
     # path('comment/delete/', CommentViewSet.as_view({'delete': 'delete'})),
 
 
+
     # path('comment/update/', CommentViewSet.as_view({'patch': 'update'})),
 
 ]
