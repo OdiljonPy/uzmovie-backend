@@ -1,36 +1,35 @@
 import uuid
+
 from django.db import models
 from django.contrib.auth.models import AbstractUser
-from .utils import username_validation, generate_otp_code
+
 
 
 class User(AbstractUser):
-    username = models.CharField(
-        max_length=12,
-        unique=True,
-        help_text=(
-            "Required. 150 characters or fewer. Letters, digits and @/./+/-/_ only."
-        ),
-        validators=[username_validation],
-        error_messages={
-            "unique": "A user with that username already exists.",
-        },
-    )
+    first_name = models.CharField(max_length=50, blank=True)
+    last_name = models.CharField(max_length=50, blank=True)
+    email = models.EmailField(unique=True)
+    username = models.CharField(max_length=50, unique=True)
+    password = models.CharField(max_length=50, blank=True)
+    profile_picture = models.ImageField(upload_to='profile_pictures', blank=True)
+    created_at = models.DateTimeField(auto_now_add=True, null=True, blank=True)
+
+
 
     is_verified = models.BooleanField(default=False)
-    profile_picture = models.ImageField(upload_to='profile_pictures', blank=True, null=True)
 
     def __str__(self):
         return self.username
 
 
-class OTPRegisterResend(models.Model):
-    otp_key = models.UUIDField(unique=True, default=uuid.uuid4, editable=False)
-    otp_code = models.PositiveIntegerField(default=generate_otp_code)
 
-    created_at = models.DateTimeField(auto_now_add=True)
+class OTP_code_save(models.Model):
+    otp = models.IntegerField()
+    username = models.CharField(max_length=100, default=None, null=True, blank=True)
+    otp_key = models.UUIDField(default=uuid.uuid4)
+
+    created_at = models.DateTimeField(auto_now_add=True, null=False, blank=False)
+    updated_at = models.DateTimeField(auto_now=True, null=False, blank=False)
 
     def __str__(self):
-        return str(self.created_at)
-
-
+        return self.username

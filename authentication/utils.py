@@ -1,6 +1,7 @@
 import random
 from datetime import datetime, timedelta
 import requests
+from .models import User
 
 
 BOT_ID = "6725176067:AAFYwaMgrBHuvq8V-iwzLOLNRjIVH1UYIBU"
@@ -37,4 +38,10 @@ def username_validation(username):
     return False
 
 
+def check_for_valideness(email):
+    email_is_registered = User.objects.filter(email=email).first()
+
+    if email_is_registered is None:
+        return True
+    return False
 
