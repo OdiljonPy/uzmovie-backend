@@ -1,7 +1,7 @@
 import uuid
 from django.db import models
 from authentication.models import User
-from .utils import generate_otp_code
+from authentication.utils import generate_otp_code
 
 
 # active/expired/canceled
@@ -38,7 +38,6 @@ class ChoiceOTP(models.Model):
 
     def __str__(self):
         return self.phone_number
-
 
 
 
