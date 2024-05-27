@@ -5,7 +5,7 @@ from .models import User, OTPRegisterResend
 from .serializers import (UserSerializer, UserRequestSerializer, LoginSerializer,
                           OTPRegisterResendSerializer, OTPRegisterResendRequestSerializer)
 from drf_yasg.utils import swagger_auto_schema
-from .utils import check_code_expire, checking_numberOfOTPs
+from .utils import check_code_expire, checking_numberOfOTPs, send_otp_code_telegram
 from rest_framework_simplejwt.views import TokenObtainPairView
 
 
@@ -39,6 +39,7 @@ class AuthenticateViewSet(ViewSet):
             serializer.save()
             otp = OTPRegisterResend.objects.create(otp_user=serializer.instance)
             otp.save()
+            send_otp_code_telegram(otp)
             return Response(data={"otp_key": otp.otp_key}, status=status.HTTP_201_CREATED)
         return Response(data={"error": "please enter valid username or password"}, status=status.HTTP_400_BAD_REQUEST)
 
