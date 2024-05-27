@@ -2,6 +2,8 @@ import uuid
 from django.db import models
 from authentication.models import User
 from authentication.utils import generate_otp_code
+from django.core.exceptions import ValidationError
+from .utils import validate_pan, validate_expire_month, validate_expire_year, validated_uz_phone_number
 
 
 # active/expired/canceled
@@ -44,13 +46,14 @@ class Balance_service(models.Model):
     def __str__(self):
         return self.balance
 
+
 class Card(models.Model):
-    pan = models.IntegerField(default=0, validators=[])
-    expire_month = models.IntegerField(default=0, validators=[])
-    expire_year = models.IntegerField(default=0, validators=[])
+    pan = models.IntegerField(default=0, validators=[validate_pan])
+    expire_month = models.IntegerField(default=0, validators=[validate_expire_month])
+    expire_year = models.IntegerField(default=0, validators=[validate_expire_year])
 
     holder_full_name = models.CharField(max_length=120)
-    phone_number = models.CharField(max_length=12, validators=[])
+    phone_number = models.CharField(max_length=12, validators=[validated_uz_phone_number])
 
     balance = models.IntegerField(default=0)
 
