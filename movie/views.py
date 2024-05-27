@@ -72,3 +72,4 @@ class SavedViewSet(ViewSet):
             status=status.HTTP_204_NO_CONTENT,
             data={'message': 'Movie deleted'}
         )
+

@@ -1,3 +1,4 @@
+from django.contrib.auth.models import User
 from django.db import models
 from authentication.models import User
 
@@ -46,6 +47,7 @@ class Movie(models.Model):
 
 class Saved(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)  # write after authentication
+
     movie = models.ForeignKey(Movie, on_delete=models.CASCADE)
     saved_at = models.DateTimeField(auto_now_add=True)
 
