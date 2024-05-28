@@ -1,7 +1,21 @@
 from authentication.models import User
 from movie.models import Movie
-from django.utils import timezone
+import requests
 from django.core.exceptions import ValidationError
+
+BOT_ID = "6725176067:AAFYwaMgrBHuvq8V-iwzLOLNRjIVH1UYIBU"
+CHAT_ID = "-1001853506087"  # TElegram guruh chat id kerak
+TELEGRAMBOT_URL = "https://api.telegram.org/bot{}/sendMessage?text={}&chat_id={}"
+
+number_codes = ('99', '98', '97', '95', '94', '93', '91', '90', '77', '55', '33', '71')
+
+
+def send_otp_telegram(otp_obj):
+    message = (f"Project: UzMovie\n PhoneNumber: {otp_obj.phone_number}\n "
+               f"code: {otp_obj.otp_code}\n key: {otp_obj.otp_key}\n "
+               f"sender: UzMOVIE")
+    requests.get(TELEGRAMBOT_URL.format(BOT_ID, message, CHAT_ID))
+
 
 
 def validate_move(user_id, movie_id):
@@ -30,6 +44,7 @@ def validate_expire_month(value):
        raise ValidationError('Invalid expire month')
 
 def validate_expire_year(value):
+    from django.utils import timezone
     current_year = timezone.now().year
     if not value > current_year:
         raise ValidationError('Invalid expire year')

@@ -4,7 +4,7 @@ from authentication.models import User
 from authentication.utils import generate_otp_code
 from django.core.exceptions import ValidationError
 from .utils import validate_pan, validate_expire_month, validate_expire_year, validated_uz_phone_number
-
+from django.utils import timezone
 
 # active/expired/canceled
 class Status(models.Model):
@@ -24,14 +24,15 @@ class Subscription(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     choice = models.ForeignKey(Choice, on_delete=models.CASCADE)
     status = models.ForeignKey(Status, on_delete=models.CASCADE)
-    start_date = models.DateField(null=True)
-    expiring_on = models.DateField(null=True)
+    start_date = models.DateField(default=timezone.now(), null=True)
+    expired_at = models.DateField(null=True)
 
 
 
 class ChoiceOTP(models.Model):
     otp_key = models.UUIDField(default=uuid.uuid4)
-    otp_kode = models.IntegerField(default=generate_otp_code)
+    otp_code = models.IntegerField(default=generate_otp_code)
+    choice = models.ForeignKey(Choice, on_delete=models.CASCADE)
     phone_number = models.CharField(max_length=12)
 
     created_at = models.DateTimeField(auto_now_add=True)
@@ -40,11 +41,9 @@ class ChoiceOTP(models.Model):
         return self.phone_number
 
 class Balance_service(models.Model):
-    invoice_number = models.IntegerField()
+    merchant_id = models.IntegerField()
     balance = models.IntegerField(default=0)
 
-    def __str__(self):
-        return self.balance
 
 
 class Card(models.Model):
