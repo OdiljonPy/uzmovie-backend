@@ -1,4 +1,6 @@
 from django.db import models
+
+from movie.models import Movie
 from .validators import validate_username
 
 
@@ -13,3 +15,11 @@ class TelegramUser(models.Model):
 
     def __str__(self):
         return self.username
+
+
+class Saved(models.Model):
+    user = models.ForeignKey(TelegramUser, on_delete=models.CASCADE)
+    movie = models.ForeignKey(Movie, on_delete=models.CASCADE, related_name='telegram_saved_movie')
+
+    def __str__(self):
+        return self.movie.title
