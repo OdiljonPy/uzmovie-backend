@@ -5,7 +5,7 @@ from .models import User, OTPRegisterResend
 from .serializers import (UserSerializer, UserRequestSerializer, LoginSerializer,
                           OTPRegisterResendSerializer, OTPRegisterResendRequestSerializer)
 from drf_yasg.utils import swagger_auto_schema
-from .utils import (check_code_expire, checking_numberOfOTPs,
+from .utils import (check_code_expire, checking_number_of_otp,
                     send_otp_code_telegram, generate_otp_code, check_resend_otp_code)
 from rest_framework_simplejwt.views import TokenObtainPairView
 
@@ -29,13 +29,13 @@ class AuthenticateViewSet(ViewSet):
         password = request.data.get('password')
         serializer = UserSerializer(data={'username': username, 'password': password})
         if serializer.is_valid():
-            checking = OTPRegisterResend.objects.filter(otp_user=serializer.instance).order_by('-created_at')
+            objs = OTPRegisterResend.objects.filter(otp_user=serializer.instance, otp_type=1).order_by('-created_at')
 
-            if checking_numberOfOTPs(checking) == 'delete':
-                OTPRegisterResend.objects.filter(otp_user=serializer.instance).delete()
-
-            elif not checking_numberOfOTPs(checking):
+            if not checking_number_of_otp(objs):
                 return Response(data={"error": "Try again 12 hours later"}, status=status.HTTP_403_FORBIDDEN)
+
+            if checking_number_of_otp(objs) == 'delete':
+                OTPRegisterResend.objects.filter(otp_user=serializer.instance, otp_type=1).delete()
 
             serializer.save()
             otp = OTPRegisterResend.objects.create(otp_user=serializer.instance)
@@ -57,17 +57,21 @@ class AuthenticateViewSet(ViewSet):
         otp_key = request.GET.get('otp_key')
         otp_code = request.data.get('otp_code')
         otp_obj = OTPRegisterResend.objects.filter(otp_key=otp_key, otp_code=otp_code).first()
-        if otp_obj:
-            if check_code_expire(otp_obj.created_at):
-                user = User.objects.filter(id=otp_obj.otp_user).first()
-                if user:
-                    user.is_verified = True
-                    user.save(updated_fields=['is_verified'])
-                    otp_obj.delete()
-                    return Response(data=UserSerializer(user).data, status=status.HTTP_200_OK)
-                return Response(data={"error": "something went wrong"}, status=status.HTTP_404_NOT_FOUND)
+
+        if not otp_obj:
+            return Response(data={"error": "otp code is wrong"}, status=status.HTTP_404_NOT_FOUND)
+
+        if check_code_expire(otp_obj.created_at):
             return Response(data={"error": "Code is expired"}, status=status.HTTP_400_BAD_REQUEST)
-        return Response(data={"error": "otp code is wrong"}, status=status.HTTP_404_NOT_FOUND)
+
+        user = User.objects.filter(id=otp_obj.otp_user).first()
+        if not user:
+            return Response(data={"error": "User does not exist"}, status=status.HTTP_404_NOT_FOUND)
+
+        user.is_verified = True
+        user.save(updated_fields=['is_verified'])
+        otp_obj.delete()
+        return Response(data=UserSerializer(user).data, status=status.HTTP_200_OK)
 
 
 class ResendAndResetViewSet(ViewSet):
@@ -88,12 +92,23 @@ class ResendAndResetViewSet(ViewSet):
     def resend_otp_code(self, request, *args, **kwargs):
         otp_key = request.GET.get('otp_key')
         otp_obj = OTPRegisterResend.objects.filter(otp_key=otp_key).first()
-        if otp_obj:
-            if not check_resend_otp_code(otp_obj.updated_at):
-                return Response(data={"error": "Try again a minute later"}, status=status.HTTP_400_BAD_REQUEST)
-            otp_obj.otp_code = generate_otp_code()
-            otp_obj.save(updated_fields=['otp_code'])
-            send_otp_code_telegram(otp_obj)
-            return Response(data={"otp_key": otp_obj.otp_key}, status=status.HTTP_200_OK)
-        return Response(data={"error": "Otp key is wrong"}, status=status.HTTP_404_NOT_FOUND)
+        # bu yerda otp codni qayta tekshirish uchun otp key soralyapti
+        if not otp_obj:
+            return Response(data={"error": "Otp key is wrong"}, status=status.HTTP_404_NOT_FOUND)
+
+        objs = OTPRegisterResend.objects.filter(otp_user=otp_obj.otp_user, otp_type=2).order_by('-created_at')
+
+        if not checking_number_of_otp(objs):
+            return Response(data={"error": "Try again 12 hours later"}, status=status.HTTP_403_FORBIDDEN)
+
+        if checking_number_of_otp(objs) == 'delete':
+            OTPRegisterResend.objects.filter(otp_user=otp_obj.otp_user, otp_type=2).delete()
+
+        if not check_resend_otp_code(otp_obj.created_at):
+            return Response(data={"error": "Try again a minute later"}, status=status.HTTP_403_FORBIDDEN)
+
+        new_otp = OTPRegisterResend.objects.create(otp_user=otp_obj.otp_user)
+        new_otp.save()
+        send_otp_code_telegram(new_otp)
+        return Response(data={"otp_key": new_otp.otp_key}, status=status.HTTP_200_OK)
 
