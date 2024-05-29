@@ -23,7 +23,7 @@ class Director(models.Model):
         return self.name
 
 
-class Subscription(models.Model):
+class SubscriptionType(models.Model):
     name = models.CharField(max_length=100)
 
     def __str__(self):
