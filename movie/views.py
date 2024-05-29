@@ -1,9 +1,11 @@
 from rest_framework.response import Response
 from rest_framework.viewsets import ViewSet
 from rest_framework import status
-from .serializers import MovieSerializer, CommentSerializer
 from rest_framework.permissions import IsAuthenticated
 from authentication.models import User
+from .serializers import (
+    MovieSerializer, CommentSerializer,
+)
 from .models import (
     Movie, Saved, Comment, MovieRating,
 )
@@ -199,5 +201,3 @@ class MovieRatingViewSet(ViewSet):
         new_movie_rating.save()
 
         return Response({'message': 'Movie rating successfully added'}, status=status.HTTP_201_CREATED)
-
-
