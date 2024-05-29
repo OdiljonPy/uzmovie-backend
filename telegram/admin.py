@@ -3,18 +3,18 @@ from .models import TelegramUser, Saved
 
 
 class TelegramUserAdmin(admin.ModelAdmin):
-    list_display = ['id', 'username', 'balance', 'is_subscribed']
-    list_display_links = ['id', 'username']
-    search_fields = ['username']
+    list_display = ['id', 'chat_id', 'balance', 'is_subscribed']
+    list_display_links = ['id', 'chat_id']
+    search_fields = ['chat_id']
 
 
 class SavedAdmin(admin.ModelAdmin):
-    list_display = ['id', 'username', 'title']
-    list_display_links = ['id', 'username']
-    search_fields = ['username', 'title']
+    list_display = ['id', 'chat_id', 'title']
+    list_display_links = ['id', 'chat_id']
+    search_fields = ['chat_id', 'title']
 
-    def username(self, obj):
-        return obj.user.username
+    def chat_id(self, obj):
+        return obj.user.chat_id
 
     def title(self, obj):
         return obj.movie.title
