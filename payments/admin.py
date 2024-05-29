@@ -1,9 +1,9 @@
 from django.contrib import admin
-from .models import Balance_service, Cards, Status, Choice, Subscription, ChoiceOTP
+from .models import Status, Choice, Subscription, ChoiceOTP, Balance_service, Card
 
 
 admin.site.register(Balance_service)
-admin.site.register(Cards)
+admin.site.register(Card)
 admin.site.register(Status)
 admin.site.register(Choice)
 admin.site.register(ChoiceOTP)

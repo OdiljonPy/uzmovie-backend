@@ -2,12 +2,11 @@ import uuid
 from django.db import models
 from authentication.models import User
 from authentication.utils import generate_otp_code
-from payments.utils import validate_pan, validate_expire_month, validate_expire_year, validated_uz_phone_number
+from django.core.exceptions import ValidationError
+from .utils import validate_pan, validate_expire_month, validate_expire_year, validated_uz_phone_number
 
 
 # active/expired/canceled
-
-
 class Status(models.Model):
     name = models.CharField(max_length=50)
 
@@ -28,8 +27,6 @@ class Subscription(models.Model):
     start_date = models.DateField(null=True)
     expiring_on = models.DateField(null=True)
 
-    def __str__(self):
-        return self.user.username
 
 
 class ChoiceOTP(models.Model):
@@ -49,7 +46,8 @@ class Balance_service(models.Model):
     def __str__(self):
         return self.balance
 
-class Cards(models.Model):
+
+class Card(models.Model):
     pan = models.IntegerField(default=0, validators=[validate_pan])
     expire_month = models.IntegerField(default=0, validators=[validate_expire_month])
     expire_year = models.IntegerField(default=0, validators=[validate_expire_year])
