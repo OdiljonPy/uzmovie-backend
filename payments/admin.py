@@ -1,5 +1,8 @@
 from django.contrib import admin
-from .models import Balance_service, Cards, Status, Choice, Subscription, ChoiceOTP
+from .models import (
+    Balance_service, Cards, Status, Choice,
+    Subscription, ChoiceOTP,
+)
 
 
 admin.site.register(Balance_service)

@@ -1,37 +1,44 @@
+from django.contrib.auth.models import User
+from django.http import Http404
 from rest_framework import serializers
-from .models import Movie, Actor, Genre, Director, Type
+from .models import (
+    Movie, Comment,
+)
 
 
-class ActorSerializer(serializers.ModelSerializer):
+class CommentSerializer(serializers.ModelSerializer):
     class Meta:
-        model = Actor
+        model = Comment
         fields = '__all__'
+        read_only_fields = ('author',)
 
+    def save(self, **kwargs):
+        request = self.context['request']
+        user = User.objects.filter(user_id=request.user.id).first()
 
-class GenreSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Genre
-        fields = '__all__'
+        if user is None:
+            raise Http404('User not found')
 
+        self.validated_data['author'] = user
 
-class DirectorSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Director
-        fields = '__all__'
-
-
-class TypeSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Type
-        fields = '__all__'
+        return super().save(**kwargs)
 
 
 class MovieSerializer(serializers.ModelSerializer):
-    type = TypeSerializer(many=True, read_only=True)
-    actors = ActorSerializer(many=True, read_only=True)
-    genres = GenreSerializer(many=True, read_only=True)
-    directors = DirectorSerializer(many=True, read_only=True)
+    comments = CommentSerializer(many=True, read_only=True)
 
     class Meta:
         model = Movie
         fields = '__all__'
+        read_only_fields = ('author',)
+
+    def save(self, **kwargs):
+        request = self.context['request']
+        user = User.objects.filter(user_id=request.user.id).first()
+
+        if user is None:
+            raise Http404('User not found')
+
+        self.validated_data['author'] = user
+
+        return super().save(**kwargs)

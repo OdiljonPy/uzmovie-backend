@@ -23,7 +23,7 @@ class SavedAdmin(admin.ModelAdmin):
 
 
 class CommentAdmin(admin.ModelAdmin):
-    list_display = ('id', 'user')
+    list_display = ('id', 'author')
 
 
 class MovieAdmin(admin.ModelAdmin):

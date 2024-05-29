@@ -1,5 +1,5 @@
-from django.contrib.auth.models import User
 from django.db import models
+from config.base_models import BaseModel
 from authentication.models import User
 
 
@@ -31,15 +31,20 @@ class Type(models.Model):
         return self.name
 
 
-class Movie(models.Model):
+class Movie(BaseModel):
+    author = models.ForeignKey(User, on_delete=models.CASCADE)
     title = models.CharField(max_length=200)
-    type = models.ForeignKey(Type, on_delete=models.CASCADE, blank=True, null=True)  # cartoons, serials, more action
-    imdb_rating = models.FloatField()
-    description = models.TextField()
-    release_date = models.DateField()
+
+    type = models.ForeignKey(Type, on_delete=models.CASCADE)
     genre = models.ManyToManyField(Genre)
     actors = models.ManyToManyField(Actor)
     directors = models.ForeignKey(Director, on_delete=models.CASCADE)
+
+    description = models.TextField()
+    release_date = models.DateField()
+    imdb_rating = models.FloatField()
+
+    is_published = models.BooleanField(default=True)
 
     def __str__(self):
         return self.title
@@ -47,18 +52,27 @@ class Movie(models.Model):
 
 class Saved(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)  # write after authentication
-
     movie = models.ForeignKey(Movie, on_delete=models.CASCADE)
+
     saved_at = models.DateTimeField(auto_now_add=True)
 
 
-class Comment(models.Model):
-    user = models.ForeignKey(User, on_delete=models.CASCADE) # write after authentication
+class Comment(BaseModel):
+    author = models.ForeignKey(User, on_delete=models.CASCADE)
     movie = models.ForeignKey(Movie, on_delete=models.CASCADE)
-    content = models.TextField()  # message
-    rating = models.FloatField()
 
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
+    content = models.TextField()
+    rating = models.FloatField()  # Could not get it
 
     is_active = models.BooleanField(default=True)
+
+    # TODO: datetime migrate error
+
+
+class MovieRating(BaseModel):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    movie = models.ForeignKey(Movie, on_delete=models.CASCADE)
+    rating = models.FloatField()
+
+    def __str__(self):
+        return self.movie.title

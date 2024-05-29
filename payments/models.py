@@ -1,8 +1,12 @@
 import uuid
+
 from django.db import models
 from authentication.models import User
 from authentication.utils import generate_otp_code
-from payments.utils import validate_pan, validate_expire_month, validate_expire_year, validated_uz_phone_number
+from payments.utils import (
+    validate_pan, validate_expire_month, validate_expire_year,
+    validated_uz_phone_number,
+)
 
 
 # active/expired/canceled
@@ -42,12 +46,14 @@ class ChoiceOTP(models.Model):
     def __str__(self):
         return self.phone_number
 
+
 class Balance_service(models.Model):
     invoice_number = models.IntegerField()
     balance = models.IntegerField(default=0)
 
     def __str__(self):
         return self.balance
+
 
 class Cards(models.Model):
     pan = models.IntegerField(default=0, validators=[validate_pan])
@@ -66,10 +72,3 @@ class Cards(models.Model):
 
     def __str__(self):
         return self.holder_full_name
-
-
-
-
-
-
-
