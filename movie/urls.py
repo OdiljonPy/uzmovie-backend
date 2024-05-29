@@ -11,7 +11,9 @@ urlpatterns = [
     path('by-director/', MovieViewSet.as_view({'get': 'get_by_director'})),
     path('by-actor/', MovieViewSet.as_view({'get': 'get_by_actor'})),
     # SAVED
-    path('save/', SavedViewSet.as_view({'post': 'save_movie'})),
+    path('save/movie/<int:pk>/', SavedViewSet.as_view({'post': 'save_movie'})),
+    path('save/list/', SavedViewSet.as_view({'get': 'list_movie'})),
+
     # COMMENT
     path('comment/create/', CommentViewSet.as_view({'post': 'comment_create'})),
     path('comment/delete/<int:pk>/', CommentViewSet.as_view({'delete': 'comment_destroy'})),
