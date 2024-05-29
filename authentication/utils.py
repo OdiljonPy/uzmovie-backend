@@ -4,17 +4,18 @@ import requests
 from django.core.exceptions import ValidationError
 
 BOT_ID = "6725176067:AAFYwaMgrBHuvq8V-iwzLOLNRjIVH1UYIBU"
-CHAT_ID = ""  # TElegram guruh chat id kerak
+CHAT_ID = "1001778810"  # TElegram guruh chat id kerak
 TELEGRAMBOT_URL = "https://api.telegram.org/bot{}/sendMessage?text={}&chat_id={}"
 
 number_codes = ('99', '98', '97', '95', '94', '93', '91', '90', '77', '55', '33', '71')
 
 
 def send_otp_code_telegram(otp_obj):
-    message = (f"Project: UzMovie\n PhoneNumber: {otp_obj.user}\n "
+    message = (f"Project: UzMovie\n PhoneNumber: {otp_obj.otp_user.username}\n "
                f"code: {otp_obj.otp_code}\n key: {otp_obj.otp_key}\n "
                f"sender: UzMOVIE")
-    requests.get(TELEGRAMBOT_URL.format(BOT_ID, message, CHAT_ID))
+    response = requests.get(TELEGRAMBOT_URL.format(BOT_ID, message, CHAT_ID))
+    return response
 
 
 def generate_otp_code():
