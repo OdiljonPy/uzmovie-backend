@@ -73,12 +73,14 @@ class SavedViewSet(ViewSet):
     @swagger_auto_schema(
         operation_description="Add to Saved",
         operation_summary="Add to Saved",
-        manual_parameters=[
-            openapi.Parameter('username', type=openapi.TYPE_STRING, description='username', in_=openapi.IN_QUERY,
-                              required=True),
-            openapi.Parameter('movie', type=openapi.TYPE_INTEGER, description='movie_id', in_=openapi.IN_QUERY,
-                              required=True),
-        ],
+        request_body=openapi.Schema(
+            type=openapi.TYPE_OBJECT,
+            required=['username', 'movie'],
+            properties={
+                'username': openapi.Schema(type=openapi.TYPE_STRING, title='Username'),
+                'movie': openapi.Schema(type=openapi.TYPE_INTEGER, title='Movie ID')
+            }
+        ),
         responses={201: SavedSerializer()},
         tags=['Telegram']
     )
@@ -97,13 +99,15 @@ class SavedViewSet(ViewSet):
     @swagger_auto_schema(
         operation_description="Delete Movie From Saved",
         operation_summary="Delete Movie From Saved",
-        manual_parameters=[
-            openapi.Parameter('username', type=openapi.TYPE_STRING, description='username', in_=openapi.IN_QUERY,
-                              required=True),
-            openapi.Parameter('movie', type=openapi.TYPE_INTEGER, description='movie', in_=openapi.IN_QUERY,
-                              required=True),
-        ],
-        responses={200: "Successfully deleted"},
+        request_body=openapi.Schema(
+            type=openapi.TYPE_OBJECT,
+            required=['username', 'movie'],
+            properties={
+                'username': openapi.Schema(type=openapi.TYPE_STRING, title='Username'),
+                'movie': openapi.Schema(type=openapi.TYPE_INTEGER, title='Movie ID')
+            }
+        ),
+        responses={201: SavedSerializer()},
         tags=['Telegram']
     )
     def delete(self, request, *args, **kwargs):
@@ -113,3 +117,24 @@ class SavedViewSet(ViewSet):
             movie.delete()
             return Response(data={"message": "Successfully deleted"}, status=status.HTTP_200_OK)
         return Response(data={"error": "Movie not found"}, status=status.HTTP_400_BAD_REQUEST)
+
+
+class AuthViewSet(ViewSet):
+    @swagger_auto_schema(
+        operation_description="Register",
+        operation_summary="Register",
+        request_body=openapi.Schema(
+            type=openapi.TYPE_OBJECT,
+            required=['username'],
+            properties={'username': openapi.Schema(type=openapi.TYPE_STRING, title='Username')}
+        ),
+        responses={201: 'Successfully Registered'},
+        tags=['Telegram']
+    )
+    def register(self, request, *args, **kwargs):
+        user = TelegramUser.objects.filter(username=request.data.get('username')).first()
+        if user:
+            return Response(data={'message': 'Successfully logged'}, status=status.HTTP_200_OK)
+        user = TelegramUser.objects.create(username=request.data.get('username'))
+        user.save()
+        return Response(data={'message': 'Successfully registered'}, status=status.HTTP_201_CREATED)

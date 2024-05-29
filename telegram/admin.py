@@ -3,15 +3,15 @@ from .models import TelegramUser, Saved
 
 
 class TelegramUserAdmin(admin.ModelAdmin):
-    list_display = ['id', 'username', 'first_name', 'last_name', 'balance', 'is_subscribed']
+    list_display = ['id', 'username', 'balance', 'is_subscribed']
     list_display_links = ['id', 'username']
-    search_fields = ['username', 'first_name', 'last_name']
+    search_fields = ['username']
 
 
 class SavedAdmin(admin.ModelAdmin):
     list_display = ['id', 'username', 'title']
     list_display_links = ['id', 'username']
-    search_fields = ['username']
+    search_fields = ['username', 'title']
 
     def username(self, obj):
         return obj.user.username

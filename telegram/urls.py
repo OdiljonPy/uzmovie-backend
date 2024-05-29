@@ -1,5 +1,5 @@
 from django.urls import path
-from .views import MovieViewSet, SavedViewSet
+from .views import MovieViewSet, SavedViewSet, AuthViewSet
 
 urlpatterns = [
     path('movies/', MovieViewSet.as_view({'get': 'filter'})),
@@ -8,4 +8,6 @@ urlpatterns = [
     path('saved/', SavedViewSet.as_view({'get': 'get'})),
     path('saved/add/', SavedViewSet.as_view({'post': 'post'})),
     path('saved/delete/', SavedViewSet.as_view({'delete': 'delete'})),
+
+    path('register/', AuthViewSet.as_view({'post': 'register'})),
 ]
