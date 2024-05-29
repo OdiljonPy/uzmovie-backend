@@ -23,7 +23,7 @@ class Director(models.Model):
         return self.name
 
 
-class Type(models.Model):
+class SubscriptionType(models.Model):
     name = models.CharField(max_length=100)
 
     def __str__(self):
@@ -32,7 +32,8 @@ class Type(models.Model):
 
 class Movie(models.Model):
     title = models.CharField(max_length=200)
-    type = models.ForeignKey(Type, on_delete=models.CASCADE, blank=True, null=True)  # cartoons, serials, more action
+    subscription_type = models.ForeignKey(SubscriptionType, on_delete=models.CASCADE, blank=True,
+                                          null=True)  # Free and Premium
     imdb_rating = models.FloatField()
     description = models.TextField()
     release_date = models.DateField()
@@ -45,13 +46,13 @@ class Movie(models.Model):
 
 
 class Saved(models.Model):
-    # user = models.ForeignKey(MyUser, on_delete=models.CASCADE)  # write after authentication
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
     movie = models.ForeignKey(Movie, on_delete=models.CASCADE)
     saved_at = models.DateTimeField(auto_now_add=True)
 
 
 class Comment(models.Model):
-    # user = models.ForeignKey(MyUser, on_delete=models.CASCADE) # write after authentication
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
     movie = models.ForeignKey(Movie, on_delete=models.CASCADE)
     content = models.TextField()  # message
     rating = models.FloatField()
