@@ -8,14 +8,14 @@ from authentication.models import User
 from config import settings
 from .models import Card, ChoiceOTP, Balance_service, Subscription, Choice, Status
 from rest_framework import status
-from .utils import send_otp_telegram
+from .utils import send_otp_telegram, expiring_date
 
 class BuySubscriptionViewSet(ViewSet):
 
     def info(self, request, *args, **kwargs):
         phone_number = request.data.get('phone_number')
         token = request.data.get('token')
-        choice_status = request.data.get('choice')
+        choice_status = kwargs.get('choice')
 
         choice = Choice.objects.filter(name=choice_status).first()
         card = Card.objects.filter(phone_number=phone_number, token=token).first()
@@ -56,16 +56,33 @@ class BuySubscriptionViewSet(ViewSet):
         service_balance.balance += price
         service_balance.save(update_fields=['balance'])
 
-        year = date.today().year
-        month = date.today().month + 1
-        day = date.today().day
+        subscription = Subscription.objects.filter(user=user_obj).first()
 
-        expired_at = date(year, month, day)
 
-        subscription = Subscription.objects.create(user=user_obj, choice=choice, status=statusOTP, expired_at=expired_at)
-        subscription.save()
+        if subscription is None:
+            year = date.today().year
+            month = date.today().month
+            day = date.today().day + 2
+
+            expired_at = date(year, month, day)
+            subscription_create = Subscription.objects.create(user=user_obj, choice=choice, status=statusOTP, expired_at=expired_at)
+            subscription_create.save()
+            return Response(data={"successfuly subscribed"}, status=status.HTTP_200_OK)
+
+
+        sub_expired_at = subscription.expired_at
+        year = sub_expired_at.year
+        month = sub_expired_at.month
+        day = sub_expired_at.day
+
+        subs_expired_at = expiring_date(year, month, day)
+
+        subscription.choice = choice
+        subscription.status = statusOTP
+        subscription.expired_at = subs_expired_at
+        subscription.save(update_fields=['choice', 'status', 'expired_at'])
 
         otp.delete()
 
-        return Response(data={"balance": card.balance}, status=status.HTTP_200_OK)
+        return Response(data={"successfuly updated subscription"}, status=status.HTTP_200_OK)
 

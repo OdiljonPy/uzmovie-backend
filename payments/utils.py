@@ -59,3 +59,22 @@ def validated_uz_phone_number(phone_number: str):
         raise ValidationError('Phone number should consists of digits (0-9)')
 
 
+def expiring_date(year, month, day):
+    from datetime import date
+    year = year
+    month = month
+    day = day
+
+    day += 30
+
+    if day > 31:
+        day -= 31
+        month += 1
+        if month > 12:
+            month = 1
+            year += 1
+
+    return date(year, month, day)
+
+
+
