@@ -1,18 +1,17 @@
 from django.db import models
 
 from movie.models import Movie
-from .validators import validate_username
 
 
 class TelegramUser(models.Model):
-    username = models.CharField(max_length=50, validators=[validate_username])
+    chat_id = models.IntegerField()
     balance = models.IntegerField(default=0)
     is_subscribed = models.BooleanField(default=False)
 
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
-        return self.username
+        return self.chat_id
 
 
 class Saved(models.Model):

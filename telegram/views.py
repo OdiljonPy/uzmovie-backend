@@ -47,7 +47,7 @@ class MovieViewSet(ViewSet):
     )
     def get_by_id(self, request, *args, **kwargs):
         movie = Movie.objects.filter(id=kwargs['pk']).first()
-        user = TelegramUser.objects.filter(username=request.GET.get('username')).first()
+        user = TelegramUser.objects.filter(chat_id=request.GET.get('chat_id')).first()
         if movie.is_premium and not user.is_subscribed:
             return Response(data={'error': 'This movie is only for premium users'}, status=status.HTTP_400_BAD_REQUEST)
         serializer = MovieSerializer(movie)
@@ -59,14 +59,15 @@ class SavedViewSet(ViewSet):
         operation_description="Get Movies From Saved",
         operation_summary="Get Movies From Saved",
         manual_parameters=[
-            openapi.Parameter('username', type=openapi.TYPE_STRING, description='username', in_=openapi.IN_QUERY,
+            openapi.Parameter('chat_id', type=openapi.TYPE_INTEGER, description='telegram chat id',
+                              in_=openapi.IN_QUERY,
                               required=True),
         ],
         responses={200: SavedSerializer()},
         tags=['Telegram']
     )
     def get(self, request, *args, **kwargs):
-        movies = Saved.objects.filter(user__username=request.GET.get('username'))
+        movies = Saved.objects.filter(user__chat_id=request.GET.get('chat_id'))
         serializer = SavedSerializer(movies, many=True)
         return Response(data=serializer.data, status=status.HTTP_200_OK)
 
@@ -75,9 +76,9 @@ class SavedViewSet(ViewSet):
         operation_summary="Add to Saved",
         request_body=openapi.Schema(
             type=openapi.TYPE_OBJECT,
-            required=['username', 'movie'],
+            required=['chat_id', 'movie'],
             properties={
-                'username': openapi.Schema(type=openapi.TYPE_STRING, title='Username'),
+                'chat_id': openapi.Schema(type=openapi.TYPE_INTEGER, title='Telegram chat id'),
                 'movie': openapi.Schema(type=openapi.TYPE_INTEGER, title='Movie ID')
             }
         ),
@@ -86,10 +87,10 @@ class SavedViewSet(ViewSet):
     )
     def post(self, request, *args, **kwargs):
         data = request.data
-        movie = Saved.objects.filter(user__username=data['username'], movie_id=data['movie']).first()
+        movie = Saved.objects.filter(user__chat_id=data['chat_id'], movie_id=data['movie']).first()
         if movie:
             return Response(data={"message": "This movie was already added"}, status=status.HTTP_200_OK)
-        data['user'] = TelegramUser.objects.filter(username=data['username']).first().id
+        data['user'] = TelegramUser.objects.filter(chat_id=data['chat_id']).first().id
         serializer = SavedSerializer(data=data)
         if serializer.is_valid():
             serializer.save()
@@ -101,9 +102,9 @@ class SavedViewSet(ViewSet):
         operation_summary="Delete Movie From Saved",
         request_body=openapi.Schema(
             type=openapi.TYPE_OBJECT,
-            required=['username', 'movie'],
+            required=['chat_id', 'movie'],
             properties={
-                'username': openapi.Schema(type=openapi.TYPE_STRING, title='Username'),
+                'chat_id': openapi.Schema(type=openapi.TYPE_INTEGER, title='Telegram chat id'),
                 'movie': openapi.Schema(type=openapi.TYPE_INTEGER, title='Movie ID')
             }
         ),
@@ -112,7 +113,7 @@ class SavedViewSet(ViewSet):
     )
     def delete(self, request, *args, **kwargs):
         data = request.data
-        movie = Saved.objects.filter(user__username=data.get('username'), movie_id=data.get('movie')).first()
+        movie = Saved.objects.filter(user__chat_id=data.get('chat_id'), movie_id=data.get('movie')).first()
         if movie:
             movie.delete()
             return Response(data={"message": "Successfully deleted"}, status=status.HTTP_200_OK)
@@ -122,19 +123,19 @@ class SavedViewSet(ViewSet):
 class AuthViewSet(ViewSet):
     @swagger_auto_schema(
         operation_description="Register",
-        operation_summary="Register",
+        operation_summary="Register new user",
         request_body=openapi.Schema(
             type=openapi.TYPE_OBJECT,
-            required=['username'],
-            properties={'username': openapi.Schema(type=openapi.TYPE_STRING, title='Username')}
+            required=['chat_id'],
+            properties={'chat_id': openapi.Schema(type=openapi.TYPE_INTEGER, title='Telegram chat id')}
         ),
         responses={201: 'Successfully Registered'},
         tags=['Telegram']
     )
     def register(self, request, *args, **kwargs):
-        user = TelegramUser.objects.filter(username=request.data.get('username')).first()
+        user = TelegramUser.objects.filter(chat_id=request.data.get('chat_id')).first()
         if user:
             return Response(data={'message': 'Successfully logged'}, status=status.HTTP_200_OK)
-        user = TelegramUser.objects.create(username=request.data.get('username'))
+        user = TelegramUser.objects.create(chat_id=request.data.get('chat_id'))
         user.save()
         return Response(data={'message': 'Successfully registered'}, status=status.HTTP_201_CREATED)
