@@ -16,6 +16,18 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path, include
+from drf_yasg.views import get_schema_view
+from drf_yasg import openapi
+from rest_framework.permissions import AllowAny
+
+
+schema_view = get_schema_view(
+    openapi.Info(
+        title="UzMovie",               #
+        default_version='v1',),
+    public=True,
+    permission_classes=[AllowAny, ],
+)
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -25,5 +37,6 @@ urlpatterns = [
     path('api/v1/movie/', include('movie.urls')),
     path('api/v1/payments/', include('payments.urls')),
     path('api/v1/telegram/', include('telegram.urls')),
+    path('docs/', schema_view.with_ui('swagger', cache_timeout=0), name='schema-swagger-ui')  #
 
 ]
