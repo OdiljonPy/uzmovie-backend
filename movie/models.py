@@ -32,19 +32,20 @@ class Type(models.Model):
 
 
 class Movie(BaseModel):
-    author = models.ForeignKey(User, on_delete=models.CASCADE)
     title = models.CharField(max_length=200)
 
     type = models.ForeignKey(Type, on_delete=models.CASCADE)
-    genre = models.ManyToManyField(Genre)
+    genres = models.ManyToManyField(Genre)
     actors = models.ManyToManyField(Actor)
-    directors = models.ForeignKey(Director, on_delete=models.CASCADE)
+    directors = models.ManyToManyField(Director)
 
     description = models.TextField()
+    price = models.FloatField(default=0, blank=True, null=True)
     release_date = models.DateField()
-    imdb_rating = models.FloatField()
+    imdb_rating = models.FloatField(default=0)
 
     is_published = models.BooleanField(default=True)
+    is_premium = models.BooleanField(default=False)
 
     def __str__(self):
         return self.title
@@ -62,11 +63,8 @@ class Comment(BaseModel):
     movie = models.ForeignKey(Movie, on_delete=models.CASCADE)
 
     content = models.TextField()
-    rating = models.FloatField()  # Could not get it
 
     is_active = models.BooleanField(default=True)
-
-    # TODO: datetime migrate error
 
 
 class MovieRating(BaseModel):

@@ -1,29 +1,22 @@
 from django.urls import path
-from .views import MovieListCreateViewSet
+from .views import (
+    MovieListCreateViewSet, CommentListCreateViewSet, UtilsViewSet,
+)
 
 urlpatterns = [
-    # MOVIE
-    # path('get-all/', MovieViewSet.as_view({'get': 'get_all'})),
-    # path('by-id/', MovieViewSet.as_view({'get': 'get_by_id'})),
-    # path('by-genre/', MovieViewSet.as_view({'get': 'get_by_genre'})),
-    # path('by-director/', MovieViewSet.as_view({'get': 'get_by_director'})),
-    # path('by-actor/', MovieViewSet.as_view({'get': 'get_by_actor'})),
-    # SAVED
-    # path('save/', SavedViewSet.as_view({'post': 'save_movie'})),
-    # COMMENT
-    # path('comment/create/', CommentViewSet.as_view({'post': 'create'})),
-    # path('comment/delete/', CommentViewSet.as_view({'delete': 'delete'})),
-    # MOVIE
-    # path('get-all/', MovieViewSet.as_view({'get': 'get_all'})),
-    # path('get-one/', MovieViewSet.as_view({'get': 'get_one'})),
-    # path('by-genre/', MovieViewSet.as_view({'get': 'get_by_genre'})),
-    # path('by-director/', MovieViewSet.as_view({'get': 'get_by_director'})),
-    # path('by-actor/', MovieViewSet.as_view({'get': 'get_by_actor'})),
-    # # SAVED
-    # path('save/', SavedViewSet.as_view({'post': 'save_movie'})),
-    # # COMMENT
-    # path('comment/create/', CommentViewSet.as_view({'post': 'create'})),
-    # path('comment/delete/', CommentViewSet.as_view({'delete': 'delete'})),
-    # path('comment/update/', CommentViewSet.as_view({'patch': 'update'})),
+
+    # Movies
+    path('', MovieListCreateViewSet.as_view({'get': 'list_movies'})),
+    path('<int:pk>/', MovieListCreateViewSet.as_view({'get': 'retrieve_movie'})),
+
+    # Comments
+    path('comments/', CommentListCreateViewSet.as_view({'get': 'list_comments'})),
+    path('comment/', CommentListCreateViewSet.as_view({'post': 'create_comment'})),
+
+    # Utils
+    path('pagination/', UtilsViewSet.as_view({'post': 'pagination'})),
+    path('search/', UtilsViewSet.as_view({'post': 'search'})),
+    path('rating/', UtilsViewSet.as_view({'post': 'rating'})),
+    path('saved/', UtilsViewSet.as_view({'post': 'saved'})),
 
 ]

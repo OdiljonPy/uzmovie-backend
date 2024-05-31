@@ -22,7 +22,7 @@ urlpatterns = [
 
     path('api/v1/auth/', include('authentication.urls')),
     path('api/v1/base/', include('base.urls')),
-    path('api/v1/movie/', include('movie.urls')),
+    path('api/v1/movies/', include('movie.urls')),
     path('api/v1/payments/', include('payments.urls')),
     path('api/v1/telegram/', include('telegram.urls')),
 
