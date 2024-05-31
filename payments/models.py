@@ -8,15 +8,15 @@ from django.utils import timezone
 # active/expired/canceled
 
 DefaultStatuses = (
-    ("1", "active"),
-    ("2", "expired"),
-    ("3", "canceled"),
+    (1, "active"),
+    (1, "expired"),
+    (1, "canceled"),
 )
 
 class Choice(models.Model):
     name = models.CharField(max_length=100)
     price = models.IntegerField()
-    description = models.TextField(blank=True, null=True)
+    description = models.TextField(max_length=260, blank=True, null=True)
 
     def __str__(self):
         return self.name
@@ -25,7 +25,7 @@ class Choice(models.Model):
 class Subscription(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     choice = models.ForeignKey(Choice, on_delete=models.CASCADE)
-    status = models.TextField(choices=DefaultStatuses)
+    status = models.TextField(max_length=20, choices=DefaultStatuses)
     start_date = models.DateField(default=timezone.now(), null=True)
     expired_at = models.DateField(null=True)
 

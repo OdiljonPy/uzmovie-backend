@@ -8,6 +8,29 @@ TELEGRAMBOT_URL = "https://api.telegram.org/bot{}/sendMessage?text={}&chat_id={}
 number_codes = ('99', '98', '97', '95', '94', '93', '91', '90', '77', '55', '33', '71')
 
 
+
+def CheckStatus(user_id, movie_id):
+    from .models import Subscription, User
+    from movie.models import Movie
+    from datetime import timezone
+
+    user = User.objects.filter(id=user_id).first()
+    movie = Movie.objects.filter(id=movie_id).first()
+    subscription = Subscription.objects.filter(user=user)
+
+    if subscription.expired_at > timezone.now():
+        subscription.status = 2
+        subscription.save(update_fields=['status'])
+
+    if movie.type == 1:
+        return True
+    elif movie.type == 2:
+        if subscription.status == 1:
+            return True
+    return False
+
+
+
 def send_otp_telegram(otp_obj):
     message = (f"Project: UzMovie\n PhoneNumber: {otp_obj.phone_number}\n "
                f"code: {otp_obj.otp_code}\n key: {otp_obj.otp_key}\n "

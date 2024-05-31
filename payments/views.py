@@ -86,7 +86,7 @@ class VerifyOTPViewSet(ViewSet):
             day = date.today().day
 
             expired_at = date(year, month, day)
-            subscription_create = Subscription.objects.create(user=user_obj, choice=choice, status='1', expired_at=expired_at)
+            subscription_create = Subscription.objects.create(user=user_obj, choice=choice, status=1, expired_at=expired_at)
             subscription_create.save()
             otp.delete()
             return Response(data={"successfuly subscribed"}, status=status.HTTP_200_OK)
