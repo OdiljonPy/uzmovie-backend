@@ -33,9 +33,11 @@ class User(AbstractUser):
 class OTPRegisterResend(models.Model):
     otp_key = models.UUIDField(unique=True, default=uuid.uuid4, editable=False)
     otp_code = models.PositiveIntegerField(default=generate_otp_code)
-
+    otp_token = models.UUIDField(default=uuid.uuid4)
     otp_user = models.ForeignKey(User, models.SET_NULL, null=True)
     otp_type = models.IntegerField(choices=OtpTypes, default=1)
+    attempts = models.IntegerField(default=0)
+
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 

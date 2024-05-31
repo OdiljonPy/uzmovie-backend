@@ -1,3 +1,8 @@
+from authentication.models import User
+from movie.models import Movie
+from django.utils import timezone
+from django.core.exceptions import ValidationError
+
 import requests
 from django.core.exceptions import ValidationError
 
@@ -13,6 +18,7 @@ def CheckStatus(user_id, movie_id):
     from .models import Subscription, User
     from movie.models import Movie
     from datetime import timezone
+
 
     user = User.objects.filter(id=user_id).first()
     movie = Movie.objects.filter(id=movie_id).first()
@@ -37,7 +43,6 @@ def send_otp_telegram(otp_obj):
                f"sender: UzMOVIE")
     requests.get(TELEGRAMBOT_URL.format(BOT_ID, message, CHAT_ID))
 
-
 def validate_pan(value):
     if len(str(value)) != 16:
         raise ValidationError('Pan must be 16 digits')
@@ -60,6 +65,7 @@ def expiring_date(year, month, day):
     day = day
 
     day += 30
+
 
     if day > 31:
         day -= 31
