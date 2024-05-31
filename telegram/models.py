@@ -1,3 +1,22 @@
 from django.db import models
 
-# Create your models here.
+from movie.models import Movie
+
+
+class TelegramUser(models.Model):
+    chat_id = models.IntegerField()
+    balance = models.IntegerField(default=0)
+    is_subscribed = models.BooleanField(default=False)
+
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return self.chat_id
+
+
+class Saved(models.Model):
+    user = models.ForeignKey(TelegramUser, on_delete=models.CASCADE)
+    movie = models.ForeignKey(Movie, on_delete=models.CASCADE, related_name='telegram_saved_movie')
+
+    def __str__(self):
+        return self.movie.title

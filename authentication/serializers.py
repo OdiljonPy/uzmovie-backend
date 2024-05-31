@@ -11,7 +11,7 @@ from django.core.exceptions import ValidationError
 class UserSerializer(ModelSerializer):
     class Meta:
         model = User
-        fields = ('username', 'first_name', 'last_name', 'profile_picture', 'is_verified', 'is_active')
+        fields = ('username', 'first_name', 'last_name', 'profile_picture', 'password')
 
 
 class UserRequestSerializer(Serializer):
@@ -21,11 +21,12 @@ class UserRequestSerializer(Serializer):
 
 class LoginSerializer(TokenObtainSerializer):
     def validate(self, attrs):
-        if self.user.is_verified:
+        user = User.objects.filter(username=attrs['username'], password=attrs['password']).first()
+        print(user)
+        if user.is_verified:
             data = super().validate(attrs)
             return data
-        else:
-            raise ValidationError("User is not verified")
+        raise ValidationError("User is not verified")
 
 
 class OTPRegisterResendSerializer(ModelSerializer):
