@@ -4,14 +4,14 @@ from movie.models import Movie
 
 
 class TelegramUser(models.Model):
-    chat_id = models.IntegerField()
+    user_id = models.IntegerField()
     balance = models.IntegerField(default=0)
     is_subscribed = models.BooleanField(default=False)
 
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
-        return self.chat_id
+        return self.user_id
 
 
 class Saved(models.Model):
