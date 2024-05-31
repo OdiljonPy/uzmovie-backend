@@ -1,6 +1,7 @@
 from django.contrib.auth.models import User
 from django.http import Http404
 from rest_framework import serializers
+
 from .models import (
     Movie, Comment, Genre, Actor, Director,
 )

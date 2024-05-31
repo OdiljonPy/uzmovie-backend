@@ -1,7 +1,10 @@
+
 from django.core.paginator import Paginator
 from rest_framework.response import Response
 from rest_framework.viewsets import ViewSet
 from rest_framework import status
+from rest_framework.response import Response
+from rest_framework.viewsets import ViewSet
 from rest_framework.permissions import IsAuthenticated
 from authentication.models import User
 from .serializers import (
@@ -10,6 +13,7 @@ from .serializers import (
 from .models import (
     Movie, Saved, Comment, MovieRating,
 )
+
 
 
 class MovieListCreateViewSet(ViewSet):
@@ -45,7 +49,8 @@ class MovieListCreateViewSet(ViewSet):
 
         serializer = MovieSerializer(movies, many=True)
 
-        return Response({'movies': serializer.data}, status=status.HTTP_200_OK)
+        return Response(data={'movies': serializer.data}, status=status.HTTP_200_OK)
+
 
     def retrieve_movie(self, request, *args, **kwargs):
         pk = kwargs.get('pk')
@@ -59,8 +64,9 @@ class MovieListCreateViewSet(ViewSet):
             return Response({'message': 'Movie not found'}, status=status.HTTP_404_NOT_FOUND)
 
         serializer = MovieSerializer(movie)
-
+        
         return Response({'message': serializer.data}, status=status.HTTP_200_OK)
+
 
 
 class CommentListCreateViewSet(ViewSet):

@@ -4,6 +4,12 @@ from django.contrib.auth.models import AbstractUser
 from .utils import username_validation, generate_otp_code
 
 
+OtpTypes = (
+    (1, "register"),
+    (2, 'resend')
+)
+
+
 class User(AbstractUser):
     username = models.CharField(
         max_length=12,
@@ -27,8 +33,10 @@ class User(AbstractUser):
 class OTPRegisterResend(models.Model):
     otp_key = models.UUIDField(unique=True, default=uuid.uuid4, editable=False)
     otp_code = models.PositiveIntegerField(default=generate_otp_code)
-
+    otp_token = models.UUIDField(default=uuid.uuid4)
     otp_user = models.ForeignKey(User, models.SET_NULL, null=True)
+    otp_type = models.IntegerField(choices=OtpTypes, default=1)
+    attempts = models.IntegerField(default=0)
 
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)

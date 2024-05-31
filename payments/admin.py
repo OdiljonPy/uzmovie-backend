@@ -5,9 +5,12 @@ from .models import (
 )
 
 
+
+
 admin.site.register(Balance_service)
-admin.site.register(Cards)
+admin.site.register(Card)
 admin.site.register(Status)
+
 admin.site.register(Choice)
 admin.site.register(ChoiceOTP)
 admin.site.register(Subscription)
