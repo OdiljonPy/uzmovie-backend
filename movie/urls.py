@@ -1,15 +1,15 @@
 from django.urls import path
-from .views import MovieViewSet, SavedViewSet, CommentViewSet, SearchAPIView
+
+from .views import MovieViewSet, CommentViewSet, SavedViewSet, SearchViewSet
 
 urlpatterns = [
     # SEARCH
-    path('search/', SearchAPIView.as_view()),
+    path('search/', SearchViewSet.as_view()),
+
     # MOVIE
-    path('get-all/', MovieViewSet.as_view({'get': 'get_all'})),
-    path('by-id/', MovieViewSet.as_view({'get': 'get_by_id'})),
-    path('by-genre/', MovieViewSet.as_view({'get': 'get_by_genre'})),
-    path('by-director/', MovieViewSet.as_view({'get': 'get_by_director'})),
-    path('by-actor/', MovieViewSet.as_view({'get': 'get_by_actor'})),
+    path('movies/', MovieViewSet.as_view({'get': 'filter'})),
+    path('movie/<int:pk>/', MovieViewSet.as_view({'get': 'get_by_id'})),
+  
     # SAVED
     path('save/movie/<int:pk>/', SavedViewSet.as_view({'post': 'save_movie'})),
     path('save/list/', SavedViewSet.as_view({'get': 'list_movie'})),
