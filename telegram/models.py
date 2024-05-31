@@ -11,7 +11,7 @@ class TelegramUser(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
-        return self.user_id
+        return str(self.user_id)
 
 
 class Saved(models.Model):
