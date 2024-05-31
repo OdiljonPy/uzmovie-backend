@@ -1,10 +1,5 @@
-from authentication.models import User
-from movie.models import Movie
-from django.utils import timezone
 from django.core.exceptions import ValidationError
-
 import requests
-from django.core.exceptions import ValidationError
 
 BOT_ID = "6725176067:AAFYwaMgrBHuvq8V-iwzLOLNRjIVH1UYIBU"
 CHAT_ID = "-1001853506087"  # TElegram guruh chat id kerak

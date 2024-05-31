@@ -63,6 +63,15 @@ class VerifyOTPViewSet(ViewSet):
     )
 
     def verify(self, request, *args, **kwargs):
+        # 'DEFAULT_THROTTLE_CLASSES': [
+        #     'rest_framework.throttling.UserRateThrottle',
+        #     'rest_framework.throttling.AnonRateThrottle',
+        # ],
+        # 'DEFAULT_THROTTLE_RATES': {
+        #     'user': '3/hour',
+        #     'anon': '3/hour',
+        # },
+
         user = request.user
         otp_code = request.data.get('otp_code')
         otp = ChoiceOTP.objects.filter(otp_code=otp_code).first()
