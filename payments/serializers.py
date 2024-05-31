@@ -9,6 +9,10 @@ class SubscriptionSerializer(ModelSerializer):
         fields = '__all__'
 
 
+class OTPCodeSerializer(Serializer):
+    otp_code = serializers.IntegerField()
+
+
 class CardPanSerializer(Serializer):
     pan = serializers.IntegerField()
 

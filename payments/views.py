@@ -1,18 +1,21 @@
 from datetime import timedelta, date
 from rest_framework.response import Response
 from rest_framework.viewsets import ViewSet
+from rest_framework.permissions import IsAuthenticated, AllowAny
+from rest_framework_simplejwt.authentication import JWTAuthentication
 from django.utils import timezone
 from authentication.models import User
 from .models import Card, ChoiceOTP, Subscription, Choice
-from authentication.serializers import OTPRegisterResendRequestSerializer
-from .serializers import SubscriptionSerializer, ChoiceOTPSerializer, CardPanSerializer
+from .serializers import SubscriptionSerializer, ChoiceOTPSerializer, CardPanSerializer, OTPCodeSerializer
 from rest_framework import status
 from drf_yasg.utils import swagger_auto_schema
-from authentication.utils import checking_number_of_otp
 from .utils import send_otp_telegram, expiring_date
 
 
 class BuySubscriptionViewSet(ViewSet):
+    permission_classes = [IsAuthenticated, AllowAny]
+    authentication_classes = [JWTAuthentication]
+
     @swagger_auto_schema(
         operation_description="info",
         operation_summary="get card number",
@@ -23,35 +26,44 @@ class BuySubscriptionViewSet(ViewSet):
     )
 
     def info(self, request, *args, **kwargs):
-        pan = request.data.get('pan')
-        choice_status = kwargs.get('choice')
+        user = request.user
 
-        choice = Choice.objects.filter(name=choice_status).first()
-        card = Card.objects.filter(pan=pan).first()
+        if user.is_authenticated:
+            pan = request.data.get('pan')
+            choice_status = kwargs.get('choice')
 
-        if card is None:
-            return Response(data="card not found", status=status.HTTP_404_NOT_FOUND)
-        if choice is None:
-            return Response(data="choice not found", status=status.HTTP_404_NOT_FOUND)
+            choice = Choice.objects.filter(name=choice_status).first()
+            card = Card.objects.filter(pan=pan).first()
 
-        otp = ChoiceOTP.objects.create(phone_number=card.phone_number, choice=choice)
-        otp.save()
+            if card is None:
+                return Response(data="card not found", status=status.HTTP_404_NOT_FOUND)
+            if choice is None:
+                return Response(data="choice not found", status=status.HTTP_404_NOT_FOUND)
 
-        send_otp_telegram(otp)
+            otp = ChoiceOTP.objects.create(phone_number=card.phone_number, choice=choice)
+            otp.save()
 
-        return Response(data={'otp_key': otp.otp_key}, status=status.HTTP_201_CREATED)
+            send_otp_telegram(otp)
+
+            return Response(data={'otp_key': otp.otp_key}, status=status.HTTP_201_CREATED)
+
+        return Response(status=status.HTTP_401_UNAUTHORIZED)
 
 class VerifyOTPViewSet(ViewSet):
+    permission_classes = [AllowAny]
+    authentication_classes = [JWTAuthentication]
+
     @swagger_auto_schema(
         operation_description="verify",
         operation_summary="verify transaction",
         responses={201: SubscriptionSerializer()},
-        request_body=OTPRegisterResendRequestSerializer(),
+        request_body=OTPCodeSerializer(),
         tags=['payment']
 
     )
 
     def verify(self, request, *args, **kwargs):
+        user = request.user
         otp_code = request.data.get('otp_code')
         otp = ChoiceOTP.objects.filter(otp_code=otp_code).first()
 

@@ -46,6 +46,3 @@ def expiring_date(year, month, day):
             year += 1
 
     return date(year, month, day)
-
-
-
