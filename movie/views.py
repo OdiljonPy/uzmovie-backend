@@ -1,12 +1,67 @@
+from django.contrib.auth.models import User
 from drf_yasg import openapi
 from drf_yasg.utils import swagger_auto_schema
+from rest_framework import status
+from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.viewsets import ViewSet
-from .models import Movie, Actor, Director, Genre, Saved, Comment
-from rest_framework import status, filters
-from .serializers import MovieSerializer, SearchSerializer, CommentSerializer
-from rest_framework.permissions import IsAuthenticated
-from authentication.models import User
+from .serializers import MovieSerializer, CommentSerializer, SavedSerializer
+from .models import Movie, Comment, Saved
+
+
+class MovieViewSet(ViewSet):
+    serializer_class = MovieSerializer
+    permission_classes = [IsAuthenticated]
+
+    @swagger_auto_schema(
+        operation_description="Filter Movies",
+        operation_summary="Filter Movies",
+        manual_parameters=[
+            openapi.Parameter('title', type=openapi.TYPE_STRING, description='title', in_=openapi.IN_QUERY),
+            openapi.Parameter('actor', type=openapi.TYPE_STRING, description='actor', in_=openapi.IN_QUERY),
+            openapi.Parameter('director', type=openapi.TYPE_STRING, description='director', in_=openapi.IN_QUERY),
+            openapi.Parameter('genre', type=openapi.TYPE_STRING, description='genre', in_=openapi.IN_QUERY),
+        ],
+        responses={200: MovieSerializer()},
+        tags=['movie']
+    )
+    def filter(self, request, *args, **kwargs):
+        data = request.GET
+        if data.get("title"):
+            movies = Movie.objects.filter(title__contains=data['title'])
+        elif data.get("actor"):
+            movies = Movie.objects.filter(actors__name__contains=data['actor'])
+        elif data.get("director"):
+            movies = Movie.objects.filter(directors__name__contains=data['director'])
+        elif data.get("genre"):
+            movies = Movie.objects.filter(genre__name__contains=data['genre'])
+        else:
+            movies = Movie.objects.all()
+
+        serializer = MovieSerializer(movies, many=True)
+        return Response(data=serializer.data, status=status.HTTP_200_OK)
+
+    @swagger_auto_schema(
+        operation_description="Get One Movie",
+        operation_summary="Get One Movie",
+        responses={200: MovieSerializer()},
+        tags=['movie']
+    )
+    def get_by_id(self, request, *args, **kwargs):
+        if not request.user.is_authenticated:
+            return Response(data={'error': 'Not authenticated'}, status=status.HTTP_404_NOT_FOUND)
+
+        movie = Movie.objects.filter(id=kwargs['pk']).first()
+
+        if movie is None:
+            return Response(data={'error': 'Movie not found'}, status=status.HTTP_404_NOT_FOUND)
+
+        comment = Comment.objects.filter(movie_id=movie)
+        serializer = CommentSerializer(comment, many=True)
+        return Response(data={
+            'movie': MovieSerializer(movie).data,
+            'comments': serializer.data
+        }, status=status.HTTP_200_OK)
 
 
 class SearchViewSet(ViewSet):
@@ -22,7 +77,7 @@ class SearchViewSet(ViewSet):
     def search(self, request, *args, **kwargs):
         data = request.GET
         search = data.get('search')
-        movies = Movie.objects.filter(name__icontains=search) # faqat (name)i bo`yicha search
+        movies = Movie.objects.filter(name__icontains=search)  # faqat (name)i bo`yicha search
         serializer = MovieSerializer(movies, many=True)
         if movies is None:
             return Response(data={'error': 'Not found'}, status=status.HTTP_404_NOT_FOUND)
@@ -30,49 +85,9 @@ class SearchViewSet(ViewSet):
         return Response(data={'movies': serializer.data}, status=status.HTTP_200_OK)
 
 
-class MovieViewSet(ViewSet):
-    serializer_class = MovieSerializer
+class CommentViewSet(ViewSet):
     permission_classes = [IsAuthenticated]
 
-    def get_all(self):
-        movies = Movie.objects.all()
-        serializer = MovieSerializer(movies, many=True)
-        return Response(serializer.data)
-
-    def get_by_id(self, pk=None):
-        movie = Movie.objects.get(pk=pk)
-        serializer = MovieSerializer(movie)
-        return Response(serializer.data)
-
-    def get_by_actor(self, request):
-        actor_id = request.data.get('actor_id')
-        if not actor_id:
-            return Response({'error': 'Actor ID is required'}, status=status.HTTP_400_BAD_REQUEST)
-        movies = Movie.objects.filter(actor=actor_id)
-        if movies.exists():
-            return Response(self.serializer_class(movies, many=True).data)
-        return Response({'error': 'Movie with this actor not found'}, status=status.HTTP_404_NOT_FOUND)
-
-    def get_by_director(self, request):
-        director_id = request.data.get('director_id')
-        if not director_id:
-            return Response({'error': 'Director ID is required'}, status=status.HTTP_400_BAD_REQUEST)
-        movies = Movie.objects.filter(director=director_id)
-        if movies.exists():
-            return Response(self.serializer_class(movies, many=True).data)
-        return Response({'error': 'Movie with this director not found'}, status=status.HTTP_404_NOT_FOUND)
-
-    def get_by_genre(self, request):
-        genre_id = request.data.get('genre_id')
-        if not genre_id:
-            return Response({'error': 'Genre ID is required'}, status=status.HTTP_400_BAD_REQUEST)
-        movies = Movie.objects.filter(genres=genre_id)
-        if movies.exists():
-            return Response(self.serializer_class(movies, many=True).data)
-        return Response({'error': 'Movie with this genre not found'}, status=status.HTTP_404_NOT_FOUND)
-
-
-class CommentViewSet(ViewSet):
     # list
     @swagger_auto_schema(
         operation_description="List of all Comments",
@@ -200,3 +215,11 @@ class SavedViewSet(ViewSet):
             data={'message': 'Movie deleted'}
         )
 
+    def list_movie(self, request, *args, **kwargs):
+        user = request.user
+        save = Saved.objects.filter(user=user)
+        serializer = SavedSerializer(save, many=True)
+        return Response(
+            data={'saved': serializer.data},
+            status=status.HTTP_200_OK
+        )
