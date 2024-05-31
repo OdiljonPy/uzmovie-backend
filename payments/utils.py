@@ -1,9 +1,13 @@
 from authentication.models import User
 from movie.models import Movie
-from .models import Subscription, Status
+from django.utils import timezone
+from django.core.exceptions import ValidationError
 
 
 def validate_move(user_id, movie_id):
+
+    from .models import Subscription, Status
+
     user = User.objects.filter(id=user_id).first()
     movie = Movie.objects.filter(id=movie_id).first()
     subscription = Subscription.objects.filter(user=user)
@@ -16,9 +20,6 @@ def validate_move(user_id, movie_id):
         return True
     else:
         return False
-
-from django.utils import timezone
-from django.core.exceptions import ValidationError
 
 def validate_pan(value):
     if len(str(value)) != 16:
@@ -41,6 +42,5 @@ def validated_uz_phone_number(phone_number: str):
         raise ValidationError('Phone number should starts with 998')
     if not phone_number[1:].isdigit():
         raise ValidationError('Phone number should consists of digits (0-9)')
-
 
 
