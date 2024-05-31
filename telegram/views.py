@@ -47,7 +47,7 @@ class MovieViewSet(ViewSet):
             paginator = Paginator(Movie, size, page, query)
             movies = paginator.page()
         elif data.get("genre"):
-            query = f"SELECT * FROM movie_movie m JOIN movie_movie_genre mg ON m.id = mg.movie_id JOIN movie_genre g ON mg.genre_id = g.id WHERE g.name = '{data['genre']}'"
+            query = f"SELECT * FROM movie_movie m JOIN movie_movie_genre mg ON m.id = mg.movie_id JOIN movie_genre g ON mg.genre_id = g.id WHERE g.name = '{data['genre'].capitalize()}'"
             paginator = Paginator(Movie, size, page, query)
             movies = paginator.page()
         else:
