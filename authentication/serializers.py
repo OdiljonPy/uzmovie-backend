@@ -11,21 +11,21 @@ from django.core.exceptions import ValidationError
 class UserSerializer(ModelSerializer):
     class Meta:
         model = User
-        fields = ('username', 'first_name', 'last_name', 'profile_picture', 'is_verified', 'is_active')
+        fields = ('username', 'first_name', 'last_name', 'profile_picture', 'password')
+        extra_kwargs = {
+            'password': {'write_only': True},
+        }
 
 
-class UserRequestSerializer(Serializer):
+class RegisterUserSerializer(Serializer):
     username = serializers.CharField(max_length=12, validators=[username_validation])
     password = serializers.CharField(max_length=50)
 
 
-class LoginSerializer(TokenObtainSerializer):
-    def validate(self, attrs):
-        if self.user.is_verified:
-            data = super().validate(attrs)
-            return data
-        else:
-            raise ValidationError("User is not verified")
+class UpdateUserSerializer(Serializer):
+    first_name = serializers.CharField(max_length=100, required=False)
+    last_name = serializers.CharField(max_length=100, required=False)
+    profile_picture = serializers.ImageField(required=False)
 
 
 class OTPRegisterResendSerializer(ModelSerializer):
@@ -34,5 +34,20 @@ class OTPRegisterResendSerializer(ModelSerializer):
         fields = ('otp_key', )
 
 
-class OTPRegisterResendRequestSerializer(Serializer):
+class OTPRegisterVerifySerializer(Serializer):
     otp_code = serializers.IntegerField()
+    otp_key = serializers.UUIDField()
+
+
+class OTPResendSerializer(Serializer):
+    otp_key = serializers.UUIDField()
+
+
+class ResetUserPasswordSerializer(Serializer):
+    username = serializers.CharField(max_length=12, validators=[username_validation,])
+
+
+class SetNewPasswordSerializer(Serializer):
+    otp_token = serializers.UUIDField()
+    password = serializers.CharField(max_length=20)
+    rep_password = serializers.CharField(max_length=20)

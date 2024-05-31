@@ -1,6 +1,6 @@
 from rest_framework import serializers
-from .models import Movie, Actor, Genre, Director, SubscriptionType
 
+from .models import Movie, Actor, Genre, Director, SubscriptionType
 
 class ActorSerializer(serializers.ModelSerializer):
     class Meta:
