@@ -12,6 +12,6 @@ class SavedSerializer(ModelSerializer):
 
     def to_representation(self, instance):
         data = super().to_representation(instance)
-        data['user'] = TelegramUser.objects.filter(id=data['user']).first().username
+        data['user'] = TelegramUser.objects.filter(id=data['user']).first().user_id
         data['movie'] = MovieSerializer(Movie.objects.filter(id=data['movie']), many=True).data
         return data

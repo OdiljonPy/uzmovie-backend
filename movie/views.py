@@ -1,12 +1,34 @@
-from django.contrib.auth.models import User
 from drf_yasg import openapi
 from drf_yasg.utils import swagger_auto_schema
-from rest_framework import status
-from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.viewsets import ViewSet
-from .serializers import MovieSerializer, CommentSerializer, SavedSerializer
-from .models import Movie, Comment, Saved
+from .models import Movie, Actor, Director, Genre, Saved, Comment
+from rest_framework import status, filters
+from .serializers import MovieSerializer, SearchSerializer, CommentSerializer
+from rest_framework.permissions import IsAuthenticated
+from authentication.models import User
+
+
+class SearchViewSet(ViewSet):
+    @swagger_auto_schema(
+        operation_description="Search movie by name",
+        operation_summary="Search movie by name",
+        manual_parameters=[
+            openapi.Parameter('search', type=openapi.TYPE_STRING, description='search', in_=openapi.IN_QUERY),
+        ],
+        responses={200: MovieSerializer()},
+        tags=['movie']
+    )
+    def search(self, request, *args, **kwargs):
+        data = request.GET
+        search = data.get('search')
+        movies = Movie.objects.filter(name__icontains=search) # faqat (name)i bo`yicha search
+        serializer = MovieSerializer(movies, many=True)
+        if movies is None:
+            return Response(data={'error': 'Not found'}, status=status.HTTP_404_NOT_FOUND)
+
+        return Response(data={'movies': serializer.data}, status=status.HTTP_200_OK)
+
 
 
 class MovieViewSet(ViewSet):
