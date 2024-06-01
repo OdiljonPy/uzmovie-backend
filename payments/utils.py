@@ -10,7 +10,7 @@ TELEGRAMBOT_URL = "https://api.telegram.org/bot{}/sendMessage?text={}&chat_id={}
 number_codes = ('99', '98', '97', '95', '94', '93', '91', '90', '77', '55', '33', '71')
 
 
-def CheckStatus(user, movie):
+def check_status(user, movie):
     from .models import Subscription
     from datetime import timezone
 
