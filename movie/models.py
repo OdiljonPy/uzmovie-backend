@@ -32,6 +32,7 @@ class Movie(models.Model):
     title = models.CharField(max_length=200)
     subscription_type = models.IntegerField(choices=MOVIE_SUBSCRIPTION_TYPE, default=1)
     imdb_rating = models.FloatField()
+    p_rating = models.FloatField(default=0)
     description = models.TextField()
     release_date = models.DateField()
     genre = models.ManyToManyField(Genre)
@@ -54,6 +55,7 @@ class Comment(models.Model):
     movie = models.ForeignKey(Movie, on_delete=models.CASCADE)
     content = models.TextField()  # message
     rating = models.FloatField()
+    rated = models.BooleanField(default=False)
 
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)

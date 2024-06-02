@@ -14,21 +14,41 @@ class SearchViewSet(ViewSet):
         operation_description="Search movie by name",
         operation_summary="Search movie by name",
         manual_parameters=[
-            openapi.Parameter('search', type=openapi.TYPE_STRING, description='search', in_=openapi.IN_QUERY),
+            openapi.Parameter('search', description='search', in_=openapi.IN_QUERY),
         ],
         responses={200: MovieSerializer()},
         tags=['movie']
     )
-    def search(self, request, *args, **kwargs):
-        data = request.GET
-        search = data.get('search')
-        movies = Movie.objects.filter(name__icontains=search) # faqat (name)i bo`yicha search
-        serializer = MovieSerializer(movies, many=True)
-        if movies is None:
-            return Response(data={'error': 'Not found'}, status=status.HTTP_404_NOT_FOUND)
+    class SearchViewSet(ViewSet):
+        def search(self, request, *args, **kwargs):
+            data = request.GET
+            search = data.get('search')
+            print(data)
+            # movies = Movie.objects.filter(name__icontains=search)  # faqat namesi bo`yicha search
+            # serializer = MovieSerializer(movies, many=True)
+            # if movies is None:
+            #     return Response(data={'error': 'Not found'}, status=status.HTTP_404_NOT_FOUND)
+            #
+            # return Response(data={'movies': SearchSerializer(movies, many=True).data}, status=status.HTTP_200_OK)
+            if Movie.objects.filter(title__icontains=search):
+                movies = Movie.objects.filter(title__icontains=search)
+            elif Movie.objects.filter(imdb_rating__icontains=search):
+                movies = Movie.objects.filter(imdb_rating__icontains=search)
+            elif Movie.objects.filter(genre__name__icontains=search):
+                movies = Movie.objects.filter(genres__name__icontains=search)
+            elif Movie.objects.filter(actors__name__icontains=search):
+                movies = Movie.objects.filter(actors__name__icontains=search)
+            elif Movie.objects.filter(directors__name__icontains=search):
+                movies = Movie.objects.filter(directors__name__icontains=search)
+            # elif Movie.objects.filter(country__icontains=search):  #
+            #     movies = Movie.objects.filter(country__icontains=search)
+            elif Movie.objects.filter(release_date__icontains=search):
+                movies = Movie.objects.filter(release_date__icontains=search)
+            else:
+                return Response(data={'error': 'Not found'}, status=status.HTTP_404_NOT_FOUND)
 
-        return Response(data={'movies': serializer.data}, status=status.HTTP_200_OK)
-
+            serializer = MovieSerializer(movies, many=True)
+            return Response(data=serializer.data, status=status.HTTP_200_OK)
 
 
 class MovieViewSet(ViewSet):
@@ -86,30 +106,7 @@ class MovieViewSet(ViewSet):
         }, status=status.HTTP_200_OK)
 
 
-class SearchViewSet(ViewSet):
-    @swagger_auto_schema(
-        operation_description="Search movie by name",
-        operation_summary="Search movie by name",
-        manual_parameters=[
-            openapi.Parameter('search', type=openapi.TYPE_STRING, description='search', in_=openapi.IN_QUERY),
-        ],
-        responses={200: MovieSerializer()},
-        tags=['movie']
-    )
-    def search(self, request, *args, **kwargs):
-        data = request.GET
-        search = data.get('search')
-        movies = Movie.objects.filter(name__icontains=search)  # faqat (name)i bo`yicha search
-        serializer = MovieSerializer(movies, many=True)
-        if movies is None:
-            return Response(data={'error': 'Not found'}, status=status.HTTP_404_NOT_FOUND)
-
-        return Response(data={'movies': serializer.data}, status=status.HTTP_200_OK)
-
-
 class CommentViewSet(ViewSet):
-    permission_classes = [IsAuthenticated]
-
     # list
     @swagger_auto_schema(
         operation_description="List of all Comments",
@@ -172,18 +169,29 @@ class CommentViewSet(ViewSet):
         if serializer.is_valid():
             serializer.validated_data['user'] = myuser_id
             check = Comment.objects.filter(user=myuser_id, movie=request.data['movie']).first()
-            s = 0
-            if check is None:
+            check2 = Comment.objects.filter(user=myuser_id, movie=request.data['movie'], rated=True).first()
+            if check is None or check2 is None:
+                check = request.data['rating']
+                if check > 10:
+                    return Response(
+                        data={'error': 'Rating must be less than or equal to 10'}, status=status.HTTP_400_BAD_REQUEST
+                    )
+                serializer.validated_data['rated'] = True
                 serializer.save()
-                comments = Comment.objects.filter(movie=request.data['movie']).all()
-                comments_len = len(comments)
+                comments = Comment.objects.filter(movie=request.data['movie'], rated=True)
+                s = 0
+                l = 0
                 for comment in comments:
                     s += comment.rating
+                    l += 1
 
-                r_movie.imdb_rating = s / comments_len
-                r_movie.save(update_fields=['imdb_rating'])
+                r_movie.p_rating = s / l
+                r_movie.save(update_fields=['p_rating'])
                 return Response(data=serializer.data, status=status.HTTP_201_CREATED)
-            return Response(data={'error': 'You`ve already commented this movie'}, status=status.HTTP_400_BAD_REQUEST)
+
+            serializer.validated_data['rating'] = 0
+            serializer.save()
+            return Response(data=serializer.data, status=status.HTTP_201_CREATED)
         return Response(data=serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     # destroy
@@ -206,10 +214,29 @@ class CommentViewSet(ViewSet):
             return Response(data={'error': 'Not authenticated'}, status=status.HTTP_404_NOT_FOUND)
 
         comment = Comment.objects.filter(id=kwargs['pk']).first()
+
         if comment is None:
             return Response(data={'error': 'Comment not found'}, status=status.HTTP_404_NOT_FOUND)
 
+        elif comment.user != request.user:
+            return Response(
+                data={'error': 'You do not have permission to delete this comment'}, status=status.HTTP_400_BAD_REQUEST
+            )
         comment.delete()
+        r_movie = Movie.objects.filter(id=comment.movie_id).first()
+        comments = Comment.objects.filter(
+            movie=comment.movie_id, rated=True
+        )
+        s = 0
+        l = 0
+
+        for comment in comments:
+            s += comment.rating
+            l += 1
+
+        r_movie.p_rating = s / l
+        r_movie.save(update_fields=['p_rating'])
+
         return Response(data={'message': 'Successfully deleted'}, status=status.HTTP_200_OK)
 
 
