@@ -166,7 +166,7 @@ class CommentViewSet(ViewSet):
             return Response(data={'error': 'Not authenticated'}, status=status.HTTP_404_NOT_FOUND)
         serializer = CommentSerializer(data=request.data)
         if serializer.is_valid():
-            serializer.validated_data['user'] = myuser_id.id
+            serializer.validated_data['user'] = myuser_id
             check = Comment.objects.filter(user=myuser_id, movie=request.data['movie']).first()
             check2 = Comment.objects.filter(user=myuser_id, movie=request.data['movie'], rated=True).first()
             if check is None or check2 is None:
