@@ -170,7 +170,7 @@ class CommentViewSet(ViewSet):
             check = Comment.objects.filter(user=myuser_id, movie=request.data['movie']).first()
             check2 = Comment.objects.filter(user=myuser_id, movie=request.data['movie'], rated=True).first()
             if check is None or check2 is None:
-                check = request.data['rating']
+                check = request.data['p_rating']
                 if check > 10:
                     return Response(
                         data={'error': 'Rating must be less than or equal to 10'}, status=status.HTTP_400_BAD_REQUEST
@@ -188,7 +188,7 @@ class CommentViewSet(ViewSet):
                 r_movie.save(update_fields=['p_rating'])
                 return Response(data=serializer.data, status=status.HTTP_201_CREATED)
 
-            serializer.validated_data['rating'] = 0
+            serializer.validated_data['p_rating'] = 0
             serializer.save()
             return Response(data=serializer.data, status=status.HTTP_201_CREATED)
         return Response(data=serializer.errors, status=status.HTTP_400_BAD_REQUEST)
