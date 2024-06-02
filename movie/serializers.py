@@ -11,7 +11,9 @@ class SearchSerializer(serializers.ModelSerializer):
 class CommentSerializer(serializers.ModelSerializer):
     class Meta:
         model = Comment
-        fields = '__all__'
+        fields = (
+            'id', 'user', 'movie', 'content', 'rating', 'rated', 'created_at', 'updated_at'
+        )
 
 
 class DirectorSerializer(serializers.ModelSerializer):
