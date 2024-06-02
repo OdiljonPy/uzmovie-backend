@@ -2,9 +2,9 @@ from drf_yasg import openapi
 from drf_yasg.utils import swagger_auto_schema
 from rest_framework.response import Response
 from rest_framework.viewsets import ViewSet
-from .models import Movie, Actor, Director, Genre, Saved, Comment
-from rest_framework import status, filters
-from .serializers import MovieSerializer, SearchSerializer, CommentSerializer
+from .models import Movie, Saved, Comment
+from rest_framework import status
+from .serializers import MovieSerializer, CommentSerializer, SavedSerializer
 from rest_framework.permissions import IsAuthenticated
 from authentication.models import User
 
@@ -53,7 +53,6 @@ class SearchViewSet(ViewSet):
 
 class MovieViewSet(ViewSet):
     serializer_class = MovieSerializer
-    permission_classes = [IsAuthenticated]
 
     @swagger_auto_schema(
         operation_description="Filter Movies",
@@ -90,18 +89,19 @@ class MovieViewSet(ViewSet):
         tags=['movie']
     )
     def get_by_id(self, request, *args, **kwargs):
+        permission_classes = [IsAuthenticated]
+        user = request.user
         if not request.user.is_authenticated:
             return Response(data={'error': 'Not authenticated'}, status=status.HTTP_404_NOT_FOUND)
 
-        movie = Movie.objects.filter(id=kwargs['pk']).first()
-
-        if movie is None:
+        movie_id = Movie.objects.filter(id=kwargs['pk']).first()
+        if movie_id is None:
             return Response(data={'error': 'Movie not found'}, status=status.HTTP_404_NOT_FOUND)
 
-        comment = Comment.objects.filter(movie_id=movie)
+        comment = Comment.objects.filter(movie_id=movie_id)
         serializer = CommentSerializer(comment, many=True)
         return Response(data={
-            'movie': MovieSerializer(movie).data,
+            'movie': MovieSerializer(movie_id).data,
             'comments': serializer.data
         }, status=status.HTTP_200_OK)
 
@@ -250,7 +250,20 @@ class SavedViewSet(ViewSet):
                 data={'detail': 'Not authenticated'},
             )
         my_user = User.objects.filter(id=request.user.id).first()
-        save = Saved.objects.filter(user_id=my_user.id, movie_id=kwargs['pk']).first()
+        if not my_user:
+            return Response(
+                status=status.HTTP_404_NOT_FOUND,
+                data={'detail': 'User not found'},
+            )
+
+        movie = Movie.objects.filter(id=kwargs['pk']).first()
+        if not movie:
+            return Response(
+                status=status.HTTP_404_NOT_FOUND,
+                data={'detail': 'Movie not found'},
+            )
+
+        save = Saved.objects.filter(user=my_user, movie=movie).first()
         if save is None:
             save = Saved.objects.create(user_id=my_user.id, movie_id=kwargs['pk'])
             save.save()
@@ -258,6 +271,7 @@ class SavedViewSet(ViewSet):
                 status=status.HTTP_201_CREATED,
                 data={'message': 'Movie saved'}
             )
+
         save.delete()
         return Response(
             status=status.HTTP_204_NO_CONTENT,

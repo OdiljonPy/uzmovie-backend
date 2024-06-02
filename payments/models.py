@@ -1,10 +1,10 @@
+import datetime
 import uuid
 from django.db import models
 from authentication.models import User
 from authentication.utils import generate_otp_code
-
-from django.core.exceptions import ValidationError
-from .utils import validate_pan, validate_expire_month, validate_expire_year, validated_uz_phone_number
+from .utils import validate_pan, validate_expire_month, validate_expire_year
+from datetime import datetime
 
 DefaultStatuses = (
     (1, "active"),
@@ -26,7 +26,7 @@ class Subscription(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     choice = models.ForeignKey(Choice, on_delete=models.CASCADE)
     status = models.TextField(max_length=20, choices=DefaultStatuses)
-    start_date = models.DateField(default=timezone.now(), null=True)
+    start_date = models.DateField(default=datetime.now(), null=True)
     expired_at = models.DateField(null=True)
 
 
