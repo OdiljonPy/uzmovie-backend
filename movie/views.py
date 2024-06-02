@@ -19,36 +19,35 @@ class SearchViewSet(ViewSet):
         responses={200: MovieSerializer()},
         tags=['movie']
     )
-    class SearchViewSet(ViewSet):
-        def search(self, request, *args, **kwargs):
-            data = request.GET
-            search = data.get('search')
-            print(data)
-            # movies = Movie.objects.filter(name__icontains=search)  # faqat namesi bo`yicha search
-            # serializer = MovieSerializer(movies, many=True)
-            # if movies is None:
-            #     return Response(data={'error': 'Not found'}, status=status.HTTP_404_NOT_FOUND)
-            #
-            # return Response(data={'movies': SearchSerializer(movies, many=True).data}, status=status.HTTP_200_OK)
-            if Movie.objects.filter(title__icontains=search):
-                movies = Movie.objects.filter(title__icontains=search)
-            elif Movie.objects.filter(imdb_rating__icontains=search):
-                movies = Movie.objects.filter(imdb_rating__icontains=search)
-            elif Movie.objects.filter(genre__name__icontains=search):
-                movies = Movie.objects.filter(genres__name__icontains=search)
-            elif Movie.objects.filter(actors__name__icontains=search):
-                movies = Movie.objects.filter(actors__name__icontains=search)
-            elif Movie.objects.filter(directors__name__icontains=search):
-                movies = Movie.objects.filter(directors__name__icontains=search)
-            # elif Movie.objects.filter(country__icontains=search):  #
-            #     movies = Movie.objects.filter(country__icontains=search)
-            elif Movie.objects.filter(release_date__icontains=search):
-                movies = Movie.objects.filter(release_date__icontains=search)
-            else:
-                return Response(data={'error': 'Not found'}, status=status.HTTP_404_NOT_FOUND)
+    def search(self, request, *args, **kwargs):
+        data = request.GET
+        search = data.get('search')
+        print(data)
+        # movies = Movie.objects.filter(name__icontains=search)  # faqat namesi bo`yicha search
+        # serializer = MovieSerializer(movies, many=True)
+        # if movies is None:
+        #     return Response(data={'error': 'Not found'}, status=status.HTTP_404_NOT_FOUND)
+        #
+        # return Response(data={'movies': SearchSerializer(movies, many=True).data}, status=status.HTTP_200_OK)
+        if Movie.objects.filter(title__icontains=search):
+            movies = Movie.objects.filter(title__icontains=search)
+        elif Movie.objects.filter(imdb_rating__icontains=search):
+            movies = Movie.objects.filter(imdb_rating__icontains=search)
+        elif Movie.objects.filter(genre__name__icontains=search):
+            movies = Movie.objects.filter(genres__name__icontains=search)
+        elif Movie.objects.filter(actors__name__icontains=search):
+            movies = Movie.objects.filter(actors__name__icontains=search)
+        elif Movie.objects.filter(directors__name__icontains=search):
+            movies = Movie.objects.filter(directors__name__icontains=search)
+        # elif Movie.objects.filter(country__icontains=search):  #
+        #     movies = Movie.objects.filter(country__icontains=search)
+        elif Movie.objects.filter(release_date__icontains=search):
+            movies = Movie.objects.filter(release_date__icontains=search)
+        else:
+            return Response(data={'error': 'Not found'}, status=status.HTTP_404_NOT_FOUND)
 
-            serializer = MovieSerializer(movies, many=True)
-            return Response(data=serializer.data, status=status.HTTP_200_OK)
+        serializer = MovieSerializer(movies, many=True)
+        return Response(data=serializer.data, status=status.HTTP_200_OK)
 
 
 class MovieViewSet(ViewSet):
