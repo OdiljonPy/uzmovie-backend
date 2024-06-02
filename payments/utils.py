@@ -12,11 +12,11 @@ number_codes = ('99', '98', '97', '95', '94', '93', '91', '90', '77', '55', '33'
 
 def check_status(user, movie):
     from .models import Subscription
-    from datetime import timezone
+    from datetime import datetime
 
     subscription = Subscription.objects.filter(user=user)
 
-    if subscription.expired_at > timezone.now():
+    if subscription.expired_at > datetime.now():
         subscription.status = 2
         subscription.save(update_fields=['status'])
 
