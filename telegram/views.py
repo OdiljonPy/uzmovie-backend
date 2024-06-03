@@ -61,13 +61,21 @@ class MovieViewSet(ViewSet):
     @swagger_auto_schema(
         operation_description="Get One Movie From Telegram",
         operation_summary="Get One Movie From Telegram",
+        manual_parameters=[
+            openapi.Parameter('user_id', type=openapi.TYPE_INTEGER, description='telegram user id',
+                              in_=openapi.IN_QUERY, required=True),
+        ],
         responses={200: MovieSerializer()},
         tags=['Telegram']
     )
     def get_by_id(self, request, *args, **kwargs):
         movie = Movie.objects.filter(id=kwargs['pk']).first()
         user = TelegramUser.objects.filter(user_id=request.GET.get('user_id')).first()
-        if movie.is_premium and not user.is_subscribed:
+        if not movie:
+            return Response(data={'error': 'Movie not found'}, status=status.HTTP_400_BAD_REQUEST)
+        if not user:
+            return Response(data={'error': 'User not found'}, status=status.HTTP_400_BAD_REQUEST)
+        if movie.subscription_type == 2 and not user.is_subscribed:
             return Response(data={'error': 'This movie is only for premium users'}, status=status.HTTP_400_BAD_REQUEST)
         serializer = MovieSerializer(movie)
         return Response(data=serializer.data, status=status.HTTP_200_OK)
@@ -86,7 +94,10 @@ class SavedViewSet(ViewSet):
         tags=['Telegram']
     )
     def get(self, request, *args, **kwargs):
-        movies = Saved.objects.filter(user__user_id=request.GET.get('user_id'))
+        user = TelegramUser.objects.filter(user_id=request.GET.get('user_id')).first()
+        if not user:
+            return Response(data={'error': 'User not found'}, status=status.HTTP_400_BAD_REQUEST)
+        movies = Saved.objects.filter(user__user_id=user.user_id)
         serializer = SavedSerializer(movies, many=True)
         return Response(data=serializer.data, status=status.HTTP_200_OK)
 
@@ -106,6 +117,9 @@ class SavedViewSet(ViewSet):
     )
     def post(self, request, *args, **kwargs):
         data = request.data
+        user = TelegramUser.objects.filter(user_id=request.GET.get('user_id')).first()
+        if not user:
+            return Response(data={'error': 'User not found'}, status=status.HTTP_400_BAD_REQUEST)
         movie = Saved.objects.filter(user__user_id=data['user_id'], movie_id=data['movie']).first()
         if movie:
             movie.delete()
