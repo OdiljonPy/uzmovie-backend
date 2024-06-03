@@ -1,10 +1,6 @@
 from django.contrib.auth.models import User
 from django.db import models
-
-MOVIE_SUBSCRIPTION_TYPE = (
-    (1, "FREE"),
-    (2, "PREMIUM")
-)
+from authentication.models import User
 
 
 class Genre(models.Model):
@@ -28,9 +24,16 @@ class Director(models.Model):
         return self.name
 
 
+class Type(models.Model):
+    name = models.CharField(max_length=100)
+
+    def __str__(self):
+        return self.name
+
+
 class Movie(models.Model):
     title = models.CharField(max_length=200)
-    subscription_type = models.IntegerField(choices=MOVIE_SUBSCRIPTION_TYPE, default=1)
+    type = models.ForeignKey(Type, on_delete=models.CASCADE, blank=True, null=True)  # cartoons, serials, more action
     imdb_rating = models.FloatField()
     description = models.TextField()
     release_date = models.DateField()
@@ -50,7 +53,7 @@ class Saved(models.Model):
 
 
 class Comment(models.Model):
-    user = models.ForeignKey(User, on_delete=models.CASCADE)  # write after authentication
+    user = models.ForeignKey(User, on_delete=models.CASCADE) # write after authentication
     movie = models.ForeignKey(Movie, on_delete=models.CASCADE)
     content = models.TextField()  # message
     rating = models.FloatField()

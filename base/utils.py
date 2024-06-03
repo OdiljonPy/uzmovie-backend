@@ -16,8 +16,3 @@ def send_message_telegram(obj):
                )
     requests.get(TELEGRAM_API_URL.format(TOKEN, message, CHAT_ID))
 
-
-def validate_telegram_message(response):
-    if response == status.HTTP_201_CREATED:
-        return True
-    return False
