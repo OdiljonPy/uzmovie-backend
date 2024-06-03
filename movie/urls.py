@@ -4,7 +4,7 @@ from .views import MovieViewSet, CommentViewSet, SavedViewSet, SearchViewSet
 
 urlpatterns = [
     # SEARCH
-    path('search/', SearchViewSet.as_view()),
+    path('search/', SearchViewSet.as_view({'get': 'search'})),
 
     # MOVIE
     path('movies/', MovieViewSet.as_view({'get': 'filter'})),
