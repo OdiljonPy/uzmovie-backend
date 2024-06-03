@@ -1,5 +1,22 @@
 from django.contrib import admin
-from .models import Genre, Actor, Director, Saved, Comment, Movie, Country
+from .models import (
+    Genre,
+    Actor,
+    Director,
+    Saved,
+    Comment,
+    Movie,
+    Country,
+    Language
+)
+
+
+class CountryAdmin(admin.ModelAdmin):
+    list_display = ('id', 'name')
+
+
+class LanguageAdmin(admin.ModelAdmin):
+    list_display = ('id', 'name')
 
 
 class GenreAdmin(admin.ModelAdmin):
@@ -31,6 +48,8 @@ class CountryAdmin(admin.ModelAdmin):
 
 
 admin.site.register(Genre, GenreAdmin)
+admin.site.register(Country, CountryAdmin)
+admin.site.register(Language, LanguageAdmin)
 admin.site.register(Actor, ActorAdmin)
 admin.site.register(Movie, MovieAdmin)
 admin.site.register(Director, DirectorAdmin)

@@ -14,6 +14,20 @@ class Genre(models.Model):
         return self.name
 
 
+class Country(models.Model):
+    name = models.CharField(max_length=100)
+
+    def __str__(self):
+        return self.name
+
+
+class Language(models.Model):
+    name = models.CharField(max_length=100)
+
+    def __str__(self):
+        return self.name
+
+
 class Actor(models.Model):
     name = models.CharField(max_length=100)
 
@@ -42,7 +56,9 @@ class Movie(models.Model):
     p_rating = models.FloatField(default=0)
     countries = models.ForeignKey(Country, on_delete=models.CASCADE)
     description = models.TextField()
+    country = models.ForeignKey(Country, on_delete=models.CASCADE)
     release_date = models.DateField()
+    language = models.ForeignKey(Language, on_delete=models.CASCADE)
     genres = models.ManyToManyField(Genre)
     actors = models.ManyToManyField(Actor)
     directors = models.ForeignKey(Director, on_delete=models.CASCADE)
