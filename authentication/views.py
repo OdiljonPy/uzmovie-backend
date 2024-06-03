@@ -44,7 +44,7 @@ class LoginView(ViewSet):
     )
     def auth_me(self, request, *args, **kwargs):
         if not (request.user.is_authenticated and request.user.is_verified):
-            return Response({"Error": "Please authenticate "}, status.HTTP_400_BAD_REQUEST)
+            return Response({"Error": "Please authenticate "}, status.HTTP_401_UNAUTHORIZED)
         token = request.META.get('HTTP_AUTHORIZATION', " ").split(' ')[1]
         token = AccessToken(token)
         user_id = token.payload.get('user_id')
@@ -124,6 +124,10 @@ class AuthenticateViewSet(ViewSet):
     def verify_register(self, request, *args, **kwargs):
         otp_key = request.data.get('otp_key')
         otp_code = request.data.get('otp_code')
+        if not request.user.is_authenticated:
+            return Response({"detail": "You should register first"}, status.HTTP_401_UNAUTHORIZED)
+        if request.user.is_verified:
+            return Response({"detail": "U already verified"}, status.HTTP_400_BAD_REQUEST)
         if not otp_code:
             return Response({"error": "Send otp code"}, status.HTTP_400_BAD_REQUEST)
         otp_code = int(otp_code)
@@ -162,7 +166,7 @@ class ResendAndResetViewSet(ViewSet):
     def reset_password(self, request, *args, **kwargs):
         username = request.data.get('username')
         user = User.objects.filter(username=username).first()
-        if not user:
+        if not (user and user.is_verified):
             return Response({"error": "You are not registered yet!"})
         otp_obj = OTPRegisterResend.objects.create(otp_user=user)
         otp_obj.save()
