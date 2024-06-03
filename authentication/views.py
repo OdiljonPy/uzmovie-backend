@@ -43,16 +43,16 @@ class LoginView(ViewSet):
 
     )
     def auth_me(self, request, *args, **kwargs):
+        if not (request.user.is_authenticated and request.user.is_verified):
+            return Response({"Error": "Please authenticate "}, status.HTTP_400_BAD_REQUEST)
         token = request.META.get('HTTP_AUTHORIZATION', " ").split(' ')[1]
         token = AccessToken(token)
         user_id = token.payload.get('user_id')
         serializer = UserSerializer(User.objects.filter(id=user_id).first())
-        if serializer.is_valid:
-            return Response(serializer.data, status.HTTP_200_OK)
-        return Response(serializer.errors, status.HTTP_400_BAD_REQUEST)
+        return Response(serializer.data, status.HTTP_200_OK)
 
     @swagger_auto_schema(
-        operation_description="Register",
+        operation_description="Profile update",
         operation_summary="Register new users",
         responses={201: OTPRegisterResendSerializer()},
         request_body=UpdateUserSerializer(),
@@ -114,9 +114,9 @@ class AuthenticateViewSet(ViewSet):
         return Response(data={"otp_key": otp.otp_key}, status=status.HTTP_201_CREATED)
 
     @swagger_auto_schema(
-        operation_description="Verifying registration",
+        operation_description="Register",
         operation_summary="Verify registered user",
-        responses={200: UserSerializer()},
+        responses={200: "success"},
         request_body=OTPRegisterVerifySerializer(),
         tags=['auth']
 
@@ -124,6 +124,9 @@ class AuthenticateViewSet(ViewSet):
     def verify_register(self, request, *args, **kwargs):
         otp_key = request.data.get('otp_key')
         otp_code = request.data.get('otp_code')
+        if not otp_code:
+            return Response({"error": "Send otp code"}, status.HTTP_400_BAD_REQUEST)
+        otp_code = int(otp_code)
         otp_obj = OTPRegisterResend.objects.filter(otp_key=otp_key).first()
         if otp_obj is None:
             return Response({"error": "Make sure otp key is right"}, status.HTTP_400_BAD_REQUEST)
@@ -144,12 +147,12 @@ class AuthenticateViewSet(ViewSet):
         user.is_verified = True
         user.save(update_fields=['is_verified'])
         OTPRegisterResend.objects.filter(otp_user=user).delete()
-        return Response(data=UserSerializer(user).data, status=status.HTTP_200_OK)
+        return Response(data={"detail": "Success"}, status=status.HTTP_200_OK)
 
 
 class ResendAndResetViewSet(ViewSet):
     @swagger_auto_schema(
-        operation_description="Resetting password",
+        operation_description="New password",
         operation_summary="Set new password",
         responses={200: "otp key returns"},
         request_body=ResetUserPasswordSerializer(),
@@ -170,7 +173,7 @@ class ResendAndResetViewSet(ViewSet):
         return Response({"otp_key": otp_obj.otp_key}, status.HTTP_200_OK)
 
     @swagger_auto_schema(
-        operation_description="Verifying reset password",
+        operation_description="New password",
         operation_summary="Verifying before setting new password",
         responses={200: "otp token returns"},
         request_body=OTPRegisterVerifySerializer(),
@@ -192,7 +195,7 @@ class ResendAndResetViewSet(ViewSet):
         return Response({"detail": "Success", "token": otp_obj.otp_token}, status.HTTP_200_OK)
 
     @swagger_auto_schema(
-        operation_description="Final stage setting password",
+        operation_description="New password",
         operation_summary="setting new password by verifying with otp token",
         responses={200: UserSerializer()},
         request_body=SetNewPasswordSerializer(),
@@ -221,7 +224,7 @@ class ResendAndResetViewSet(ViewSet):
         return Response(data=serializer.data, status=status.HTTP_200_OK)
 
     @swagger_auto_schema(
-        operation_description="Verifying registration",
+        operation_description="Resend",
         operation_summary="Verify registered user",
         responses={200: OTPRegisterResendSerializer()},
         request_body=OTPResendSerializer(),
