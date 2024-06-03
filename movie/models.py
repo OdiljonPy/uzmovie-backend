@@ -7,6 +7,7 @@ MOVIE_SUBSCRIPTION_TYPE = (
 )
 
 
+
 class Genre(models.Model):
     name = models.CharField(max_length=100)
 
@@ -36,6 +37,13 @@ class Actor(models.Model):
 
 
 class Director(models.Model):
+    name = models.CharField(max_length=100)
+
+    def __str__(self):
+        return self.name
+
+
+class Type(models.Model):
     name = models.CharField(max_length=100)
 
     def __str__(self):
