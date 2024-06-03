@@ -1,5 +1,7 @@
 from django.core.exceptions import ValidationError
 import requests
+from rest_framework.response import Response
+from rest_framework import status
 
 BOT_ID = "6725176067:AAFYwaMgrBHuvq8V-iwzLOLNRjIVH1UYIBU"
 CHAT_ID = "-1001853506087"  # TElegram guruh chat id kerak
@@ -8,27 +10,24 @@ TELEGRAMBOT_URL = "https://api.telegram.org/bot{}/sendMessage?text={}&chat_id={}
 number_codes = ('99', '98', '97', '95', '94', '93', '91', '90', '77', '55', '33', '71')
 
 
-def CheckStatus(user_id, movie_id):
-    from .models import Subscription, User
-    from movie.models import Movie
-    from datetime import timezone
+def check_status(user, movie):
+    from .models import Subscription
+
+    from datetime import datetime
 
 
-    user = User.objects.filter(id=user_id).first()
-    movie = Movie.objects.filter(id=movie_id).first()
     subscription = Subscription.objects.filter(user=user)
 
-    if subscription.expired_at > timezone.now():
+    if subscription.expired_at > datetime.now():
         subscription.status = 2
         subscription.save(update_fields=['status'])
 
     if movie.type == 1:
-        return True
+        return Response(data={"ok": True}, status=status.HTTP_200_OK)
     elif movie.type == 2:
         if subscription.status == 1:
-            return True
-    return False
-
+            return Response(data={"ok": True}, status=status.HTTP_200_OK)
+    return Response(data={"ok": False}, status=status.HTTP_400_BAD_REQUEST)
 
 
 def send_otp_telegram(otp_obj):

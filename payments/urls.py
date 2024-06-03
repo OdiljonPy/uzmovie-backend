@@ -1,11 +1,11 @@
 from django.urls import path
-from .views import BuySubscriptionViewSet, VerifyOTPViewSet
+from rest_framework.routers import DefaultRouter
+from .views import BuySubscriptionViewSet, VerifyOTPViewSet, GetChoicesViewSet
 
 urlpatterns = [
-    path('info/<str:choice>/', BuySubscriptionViewSet.as_view({"post": 'info'})),
-    path('verify/', VerifyOTPViewSet.as_view({"post": 'verify'})),
+    path('', GetChoicesViewSet.as_view({"get": 'choices'})),
+    path('info/', BuySubscriptionViewSet.as_view({"post": 'info'})),
+    path('verify/', VerifyOTPViewSet.as_view({"post": 'verify'}),),
 ]
-
-
 
 
