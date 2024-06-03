@@ -12,10 +12,6 @@ from django.contrib.auth.hashers import make_password
 from rest_framework_simplejwt.tokens import RefreshToken, AccessToken
 
 
-# otp reset-password otp keyi va kodi bilan register verify bo`lyapti
-# verify qimagan user kodni ozgartryapti
-
-
 class LoginView(ViewSet):
     @swagger_auto_schema(
         operation_description="Log in ",
