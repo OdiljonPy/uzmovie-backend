@@ -11,10 +11,6 @@ from .models import (
 )
 
 
-class CountryAdmin(admin.ModelAdmin):
-    list_display = ('id', 'name')
-
-
 class LanguageAdmin(admin.ModelAdmin):
     list_display = ('id', 'name')
 
@@ -55,4 +51,3 @@ admin.site.register(Movie, MovieAdmin)
 admin.site.register(Director, DirectorAdmin)
 admin.site.register(Saved, SavedAdmin)
 admin.site.register(Comment, CommentAdmin)
-admin.site.register(Country, CountryAdmin)
