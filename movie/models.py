@@ -42,13 +42,6 @@ class Director(models.Model):
         return self.name
 
 
-class Country(models.Model):
-    name = models.CharField(max_length=100)
-
-    def __str__(self):
-        return self.name
-
-
 class Movie(models.Model):
     title = models.CharField(max_length=200)
     subscription_type = models.IntegerField(choices=MOVIE_SUBSCRIPTION_TYPE)
@@ -56,7 +49,6 @@ class Movie(models.Model):
     p_rating = models.FloatField(default=0)
     countries = models.ForeignKey(Country, on_delete=models.CASCADE)
     description = models.TextField()
-    country = models.ForeignKey(Country, on_delete=models.CASCADE)
     release_date = models.DateField()
     language = models.ForeignKey(Language, on_delete=models.CASCADE)
     genres = models.ManyToManyField(Genre)
