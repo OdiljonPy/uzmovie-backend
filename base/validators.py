@@ -11,3 +11,5 @@ def validate_uz_phone_number(phone_number: str):
         raise ValidationError('Phone number must be  digital numbers')
 
 
+
+
