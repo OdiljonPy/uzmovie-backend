@@ -1,7 +1,8 @@
+import datetime
 import uuid
 from django.db import models
 from authentication.models import User
-from authentication.utils import generate_otp_code
+from authentication.utils import generate_otp_code, username_validation
 from .utils import validate_pan, validate_expire_month, validate_expire_year
 from datetime import datetime
 
@@ -34,8 +35,10 @@ class ChoiceOTP(models.Model):
     otp_key = models.UUIDField(default=uuid.uuid4)
     otp_code = models.IntegerField(default=generate_otp_code)
     choice = models.ForeignKey(Choice, on_delete=models.CASCADE)
-    phone_number = models.ForeignKey(User, on_delete=models.CASCADE)
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    phone_number = models.IntegerField(max_length=12, validators=[username_validation])
 
+    expired_at = models.DateField(null=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
 
@@ -44,10 +47,10 @@ class Card(models.Model):
     pan = models.IntegerField(max_length=16, validators=[validate_pan])
     expire_month = models.IntegerField(max_length=2, validators=[validate_expire_month])
     expire_year = models.IntegerField(max_length=4, validators=[validate_expire_year])
-
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
 
     holder_full_name = models.CharField(max_length=120)
-    phone_number = models.ForeignKey(User, on_delete=models.CASCADE)
+    phone_number = models.CharField(max_length=12, validators=[username_validation])
     balance = models.IntegerField(default=0)
 
     token = models.UUIDField(default=uuid.uuid4, unique=True)
