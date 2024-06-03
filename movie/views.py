@@ -117,7 +117,9 @@ class CommentViewSet(ViewSet):
         if not request.user.is_authenticated:
             return Response(data={'error': 'Not authenticated'}, status=status.HTTP_404_NOT_FOUND)
 
-        return Response(data={'comments': CommentSerializer().data}, status=status.HTTP_200_OK)
+        comment = Comment.objects.all()
+        serializer = CommentSerializer(comment, many=True)
+        return Response(data={'comments': serializer.data}, status=status.HTTP_200_OK)
 
     # review
     @swagger_auto_schema(
