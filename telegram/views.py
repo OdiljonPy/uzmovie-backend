@@ -117,7 +117,7 @@ class SavedViewSet(ViewSet):
     )
     def post(self, request, *args, **kwargs):
         data = request.data
-        user = TelegramUser.objects.filter(user_id=request.GET.get('user_id')).first()
+        user = TelegramUser.objects.filter(user_id=data.get('user_id')).first()
         if not user:
             return Response(data={'error': 'User not found'}, status=status.HTTP_400_BAD_REQUEST)
         movie = Saved.objects.filter(user__user_id=data['user_id'], movie_id=data['movie']).first()
