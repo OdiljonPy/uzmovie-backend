@@ -1,4 +1,3 @@
-import datetime
 import uuid
 from django.db import models
 from authentication.models import User
@@ -38,6 +37,7 @@ class ChoiceOTP(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     phone_number = models.IntegerField(max_length=12, validators=[username_validation])
 
+    expired_at = models.DateField(null=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
 

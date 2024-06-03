@@ -7,7 +7,7 @@ from django.utils import timezone
 from authentication.models import User
 from .models import Card, ChoiceOTP, Subscription, Choice
 from .serializers import SubscriptionSerializer, ChoiceOTPSerializer, CardPanSerializer, OTPCodeSerializer, ChoiceSerializer
-from rest_framework import status, throttling
+from rest_framework import status
 from drf_yasg.utils import swagger_auto_schema
 from .utils import send_otp_telegram, expiring_date
 
@@ -30,6 +30,8 @@ class BuySubscriptionViewSet(ViewSet):
     permission_classes = [IsAuthenticated, AllowAny]
     authentication_classes = [JWTAuthentication]
 
+    throttle_scope = 'send_otp'
+
     @swagger_auto_schema(
         operation_description="info",
         operation_summary="get card number",
@@ -48,6 +50,13 @@ class BuySubscriptionViewSet(ViewSet):
 
             choice = Choice.objects.filter(name=choice_status).first()
             card = Card.objects.filter(pan=pan).first()
+
+            del_otp = ChoiceOTP.objects.all()
+
+            # for i in del_otp:
+            #     if i.created_at < timezone.now():
+            #         del_otp = ChoiceOTP.objects.filter(id=i.id).first()
+            #         del_otp.delete()
 
             if card is None:
                 return Response(data="card not found", status=status.HTTP_404_NOT_FOUND)
