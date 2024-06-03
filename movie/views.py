@@ -107,9 +107,6 @@ class CommentViewSet(ViewSet):
         serializer = CommentSerializer(comment, many=True)
         return Response(data={'comments': serializer.data}, status=status.HTTP_200_OK)
 
-        comment = Comment.objects.all()
-        serializer = CommentSerializer(comment, many=True)
-        return Response(data={'comments': serializer.data}, status=status.HTTP_200_OK)
 
     # review
     def comment_review(self, request, *args, **kwargs):
@@ -177,15 +174,17 @@ class CommentViewSet(ViewSet):
         comments = Comment.objects.filter(
             movie=comment.movie_id, rated=True
         )
-        s = 0
-        l = 0
+        if comments is not None:
+            s = 0
+            l = 0
 
-        for comment in comments:
-            s += comment.rating
-            l += 1
+            for comment in comments:
+                s += comment.rating
+                l += 1
 
-        r_movie.p_rating = s / l
-        r_movie.save(update_fields=['p_rating'])
+            r_movie.p_rating = s / l
+            r_movie.save(update_fields=['p_rating'])
+            return Response(data={'message': 'Successfully deleted'}, status=status.HTTP_200_OK)
 
         return Response(data={'message': 'Successfully deleted'}, status=status.HTTP_200_OK)
 
