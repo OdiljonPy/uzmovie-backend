@@ -36,7 +36,7 @@ class CommentAdmin(admin.ModelAdmin):
 
 
 class MovieAdmin(admin.ModelAdmin):
-    list_display = ('id', 'title', 'release_date', 'imdb_rating')
+    list_display = ('id', 'title', 'release_date')
 
 
 class CountryAdmin(admin.ModelAdmin):
