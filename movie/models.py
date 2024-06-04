@@ -68,7 +68,7 @@ class Comment(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     movie = models.ForeignKey(Movie, on_delete=models.CASCADE)
     content = models.TextField()  # message
-    rating = models.FloatField()
+    rating = models.FloatField(default=0)
     rated = models.BooleanField(default=False)
 
     created_at = models.DateTimeField(auto_now_add=True)
