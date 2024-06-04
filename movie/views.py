@@ -190,7 +190,7 @@ class CommentViewSet(ViewSet):
                     l += 1
 
                 r_movie.overall_rating = s / l
-                r_movie.save(update_fields=['overall_rating'])
+                r_movie.save(update_fields=['p_rating'])
                 return Response(data=serializer.data, status=status.HTTP_201_CREATED)
 
             serializer.validated_data['rating'] = 0
@@ -233,7 +233,6 @@ class CommentViewSet(ViewSet):
         if comments is not None:
             s = 0
             l = 0
-
             for comment in comments:
                 s += comment.rating
                 l += 1
