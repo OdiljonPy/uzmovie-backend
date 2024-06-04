@@ -245,6 +245,7 @@ class CommentViewSet(ViewSet):
 
 class SavedViewSet(ViewSet):
     permission_classes = [IsAuthenticated]
+
     @swagger_auto_schema(
         operation_description="Saved movie by id",
         operation_summary="Saved movie by id",
