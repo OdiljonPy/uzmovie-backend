@@ -189,7 +189,7 @@ class CommentViewSet(ViewSet):
                     s += comment.rating
                     l += 1
 
-                r_movie.overall_rating = s / l
+                r_movie.p_rating = s / l
                 r_movie.save(update_fields=['p_rating'])
                 return Response(data=serializer.data, status=status.HTTP_201_CREATED)
 
@@ -230,7 +230,7 @@ class CommentViewSet(ViewSet):
         comments = Comment.objects.filter(
             movie=comment.movie_id, rated=True
         )
-        if comments is not None:
+        if comments == []:
             s = 0
             l = 0
             for comment in comments:
@@ -241,7 +241,10 @@ class CommentViewSet(ViewSet):
             r_movie.save(update_fields=['p_rating'])
             return Response(data={'message': 'Successfully deleted'}, status=status.HTTP_200_OK)
 
+        r_movie.p_rating = 0
+        r_movie.save(update_fields=['p_rating'])
         return Response(data={'message': 'Successfully deleted'}, status=status.HTTP_200_OK)
+
 
 
 class SavedViewSet(ViewSet):
