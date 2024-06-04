@@ -17,7 +17,10 @@ class SearchViewSet(ViewSet):
         manual_parameters=[
             openapi.Parameter('search', type=openapi.TYPE_STRING, description='search', in_=openapi.IN_QUERY),
         ],
-        responses={200: MovieSerializer()},
+        responses={
+            200: MovieSerializer(),
+            404: 'Not found'
+        },
         tags=['movie']
     )
     def search(self, request, *args, **kwargs):
@@ -100,6 +103,12 @@ class MovieViewSet(ViewSet):
 
 class CommentViewSet(ViewSet):
     # list
+    @swagger_auto_schema(
+        operation_description="List of all Comments",
+        operation_summary="List of all Comments",
+        responses={200: CommentSerializer()},
+        tags=['movie']
+    )
     def comment_list(self, request, *args, **kwargs):
         if not request.user.is_authenticated:
             return Response(data={'error': 'Not authenticated'}, status=status.HTTP_404_NOT_FOUND)
@@ -107,8 +116,21 @@ class CommentViewSet(ViewSet):
         serializer = CommentSerializer(comment, many=True)
         return Response(data={'comments': serializer.data}, status=status.HTTP_200_OK)
 
-
     # review
+    @swagger_auto_schema(
+        operation_description="Review Comment by id",
+        operation_summary="Review Comment by id",
+        manual_parameters=[
+            openapi.Parameter(
+                'id', type=openapi.TYPE_INTEGER, description='Comment id', in_=openapi.IN_QUERY, required=True
+            )
+        ],
+        responses={
+            404: 'Not Found',
+            200: CommentSerializer()
+        },
+        tags=['movie']
+    )
     def comment_review(self, request, *args, **kwargs):
         if not request.user.is_authenticated:
             return Response(data={'error': 'Not authenticated'}, status=status.HTTP_404_NOT_FOUND)
@@ -120,6 +142,23 @@ class CommentViewSet(ViewSet):
         return Response(data={'comment': CommentSerializer(comment).data}, status=status.HTTP_200_OK)
 
     # create
+    @swagger_auto_schema(
+        operation_description="Create Comment",
+        operation_summary="Create Comment",
+        manual_parameters=[
+            openapi.Parameter(
+                'movie id', type=openapi.TYPE_INTEGER, description='movie id', in_=openapi.IN_QUERY, required=True),
+            openapi.Parameter(
+                'content', type=openapi.TYPE_STRING, description='message', in_=openapi.IN_QUERY, required=True),
+            openapi.Parameter(
+                'rating', type=openapi.TYPE_INTEGER, description='rating', in_=openapi.IN_QUERY, required=True),
+        ],
+        responses={
+            404: 'Not Found',
+            200: CommentSerializer()
+        },
+        tags=['movie']
+    )
     def comment_create(self, request, *args, **kwargs):
         # rating = request.data.get('rating')
         r_movie = Movie.objects.filter(id=request.data['movie']).first()
@@ -127,15 +166,19 @@ class CommentViewSet(ViewSet):
 
         if not request.user.is_authenticated:
             return Response(data={'error': 'Not authenticated'}, status=status.HTTP_404_NOT_FOUND)
+
+        request.data['user'] = myuser_id.id
         serializer = CommentSerializer(data=request.data)
+
         if serializer.is_valid():
             serializer.validated_data['user'] = myuser_id
             check = Comment.objects.filter(user=myuser_id, movie=request.data['movie']).first()
             check2 = Comment.objects.filter(user=myuser_id, movie=request.data['movie'], rated=True).first()
+            rr = request.data['rating']
             if check is None or check2 is None:
-                if request.data['rating'] > 10:
+                if rr > 10 or rr < 0:
                     return Response(
-                        data={'error': 'Rating must be less than or equal to 10'}, status=status.HTTP_400_BAD_REQUEST
+                        data={'error': 'You have to enter number that 1 to 10'}, status=status.HTTP_400_BAD_REQUEST
                     )
                 serializer.validated_data['rated'] = True
                 serializer.save()
@@ -156,6 +199,19 @@ class CommentViewSet(ViewSet):
         return Response(data=serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     # destroy
+    @swagger_auto_schema(
+        operation_description="Delete Comment bt id",
+        operation_summary="Delete Comment bt id",
+        manual_parameters=[
+            openapi.Parameter(
+                'id', type=openapi.TYPE_INTEGER, description='comment id', in_=openapi.IN_QUERY, required=True)
+        ],
+        responses={
+            404: 'Not Found',
+            200: 'Successfully Deleted'
+        },
+        tags=['movie']
+    )
     def comment_destroy(self, request, *args, **kwargs):
         if not request.user.is_authenticated:
             return Response(data={'error': 'Not authenticated'}, status=status.HTTP_404_NOT_FOUND)

@@ -45,7 +45,6 @@ class Director(models.Model):
 class Movie(models.Model):
     title = models.CharField(max_length=200)
     subscription_type = models.IntegerField(choices=MOVIE_SUBSCRIPTION_TYPE)
-    imdb_rating = models.FloatField()
     p_rating = models.FloatField(default=0)
     countries = models.ForeignKey(Country, on_delete=models.CASCADE)
     description = models.TextField()

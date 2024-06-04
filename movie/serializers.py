@@ -5,7 +5,10 @@ from .models import Movie, Director, Comment, Saved, Genre, Country
 class SearchSerializer(serializers.ModelSerializer):
     class Meta:
         model = Movie
-        fields = '__all__'
+        fields = (
+            'id', 'title', 'subscription_type', 'p_rating', 'countries', 'description',
+            'release_date', 'language', 'genres', 'actors', 'directors'
+        )
 
 
 class CommentSerializer(serializers.ModelSerializer):
