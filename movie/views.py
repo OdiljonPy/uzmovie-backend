@@ -75,30 +75,27 @@ class MovieViewSet(ViewSet):
         tags=['movie']
     )
     def get_by_id(self, request, *args, **kwargs):
-        permission_classes = [IsAuthenticated]
         user = request.user
         if not request.user.is_authenticated:
             return Response(data={'error': 'Not authenticated'}, status=status.HTTP_404_NOT_FOUND)
 
         movie = Movie.objects.filter(id=kwargs['pk']).first()
-        # is_premium = check_status(user, movie)
-
-        # if is_premium == {'ok': True}:
         if movie is None:
             return Response(data={'error': 'Movie not found'}, status=status.HTTP_404_NOT_FOUND)
-
-        comment = Comment.objects.filter(movie_id=movie)
-        serializer = CommentSerializer(comment, many=True)
+        is_premium = check_status(user, movie)
+        if is_premium.data == {'ok': True}:
+            comment = Comment.objects.filter(movie_id=movie)
+            serializer = CommentSerializer(comment, many=True)
+            return Response(
+                status=status.HTTP_200_OK,
+                data={
+                    'movie': MovieSerializer(movie).data,
+                    'comments': serializer.data
+                })
         return Response(
-            status=status.HTTP_200_OK,
-            data={
-                'movie': MovieSerializer(movie).data,
-                'comments': serializer.data
-            })
-        # return Response(
-        #     status=status.HTTP_400_BAD_REQUEST,
-        #     data={'detail': 'This movie only for premium users'}
-        # )
+            status=status.HTTP_400_BAD_REQUEST,
+            data={'detail': 'This movie only for premium users'}
+        )
 
 
 class CommentViewSet(ViewSet):
@@ -246,10 +243,20 @@ class CommentViewSet(ViewSet):
         return Response(data={'message': 'Successfully deleted'}, status=status.HTTP_200_OK)
 
 
-
 class SavedViewSet(ViewSet):
     permission_classes = [IsAuthenticated]
-
+    @swagger_auto_schema(
+        operation_description="Saved movie by id",
+        operation_summary="Saved movie by id",
+        manual_parameters=[
+            openapi.Parameter('saved', type=openapi.TYPE_INTEGER, description='saved', in_=openapi.IN_QUERY),
+        ],
+        responses={
+            200: MovieSerializer(),
+            404: 'Not found'
+        },
+        tags=['movie']
+    )
     def save_movie(self, request, *args, **kwargs):
         if not request.user.is_authenticated:
             return Response(
@@ -285,6 +292,15 @@ class SavedViewSet(ViewSet):
             data={'message': 'Movie deleted'}
         )
 
+    @swagger_auto_schema(
+        operation_description="Saved movie list",
+        operation_summary="Saved movie list",
+        responses={
+            200: MovieSerializer(),
+            404: 'Not found'
+        },
+        tags=['movie']
+    )
     def list_movie(self, request, *args, **kwargs):
         user = request.user
         save = Saved.objects.filter(user=user)
