@@ -14,7 +14,7 @@ def check_status(user, movie):
     from .models import Subscription
     from datetime import datetime
 
-    subscription = Subscription.objects.filter(user=user)
+    subscription = Subscription.objects.filter(user=user).first()
 
     if subscription.expired_at < datetime.now():
         subscription.status = "2"
