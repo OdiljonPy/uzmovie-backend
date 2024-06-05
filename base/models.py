@@ -10,14 +10,19 @@ DefaultStatus = (
 
 
 class About(models.Model):
-    title = models.CharField(max_length=50)
-    description = models.TextField()
-    image = models.ImageField(upload_to='images/')
+    for_advertise = models.CharField(max_length=50)
+    watch_movie = models.PositiveIntegerField()
+    movie_number = models.PositiveIntegerField()
+    qr_image = models.ImageField(upload_to='images/')
+    location = models.CharField(max_length=150)
     phone_number = models.CharField(max_length=13, validators=[validate_uz_phone_number])
     email = models.EmailField()
 
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
     def __str__(self):
-        return self.title
+        return self.email
 
 
 class Contact(models.Model):
@@ -26,7 +31,7 @@ class Contact(models.Model):
     email = models.EmailField()
     phone_number = models.CharField(max_length=13, validators=[validate_uz_phone_number])
     message = models.TextField()
-    # status = models.IntegerField(choices=DefaultStatus, default=1)
+    status = models.IntegerField(choices=DefaultStatus, default=1)
 
     is_solved = models.BooleanField(default=False)
 

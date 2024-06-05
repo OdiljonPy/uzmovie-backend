@@ -1,5 +1,6 @@
 import requests
-
+# BOT_ID = "6725176067:AAFYwaMgrBHuvq8V-iwzLOLNRjIVH1UYIBU"
+# CHAT_ID = "-1001853506087"
 TOKEN = "6912718237:AAH2v2r4x2TuYnHqfpbi1ci43AxYKEiBWoE"
 CHAT_ID = "5093765356"
 TELEGRAM_API_URL = "https://api.telegram.org/bot{}/sendMessage?text={}&chat_id={}"

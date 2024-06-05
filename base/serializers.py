@@ -11,4 +11,4 @@ class ContactSerializer(serializers.ModelSerializer):
 class AboutSerializer(serializers.ModelSerializer):
     class Meta:
         model = About
-        fields = ('title', 'description', 'image', 'phone_number', 'email')
+        fields = ('id', 'phone_number', 'email', 'watch_movie', 'location', 'qr_image', 'movie_number', 'for_advertise')
