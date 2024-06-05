@@ -28,14 +28,14 @@ class MovieViewSet(ViewSet):
     )
     def filter(self, request, *args, **kwargs):
         data = request.GET
-        page = 1
-        if data.get('page'):
-            page = int(data['page'])
-        size = 2
-        if data.get('size'):
-            size = int(data['size'])
+        page = data.get('page', 1)
+        size = data.get('size', 2)
+        if not str(page).isdigit() or int(page) < 1:
+            return Response(data={'error': 'page must be greater than 0'}, status=status.HTTP_400_BAD_REQUEST)
+        if not str(size).isdigit() or int(size) < 1:
+            return Response(data={'error': 'size must be greater than 0'}, status=status.HTTP_400_BAD_REQUEST)
         if data.get("title"):
-            query = f"SELECT * FROM movie_movie WHERE title LIKE '%{data['title']}%'"
+            query = f"SELECT * FROM movie_movie WHERE title LIKE '%{data['title'].capitalize()}%'"
             paginator = Paginator(Movie, size, page, query)
             movies = paginator.page()
         elif data.get("actor"):
