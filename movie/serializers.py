@@ -6,7 +6,7 @@ class SearchSerializer(serializers.ModelSerializer):
     class Meta:
         model = Movie
         fields = (
-            'id', 'title', 'subscription_type', 'p_rating', 'countries', 'description',
+            'id', 'title', 'subscription_type', 'movie_rating', 'countries', 'description',
             'release_date', 'language', 'genres', 'actors', 'directors'
         )
 
@@ -15,7 +15,7 @@ class CommentSerializer(serializers.ModelSerializer):
     class Meta:
         model = Comment
         fields = (
-            'id', 'user', 'movie', 'content', 'rating', 'rated',  # is active
+            'id', 'user', 'movie', 'content', 'rating',  # is active
         )
 
 
