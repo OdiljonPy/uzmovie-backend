@@ -72,9 +72,9 @@ class MovieViewSet(ViewSet):
         movie = Movie.objects.filter(id=kwargs['pk']).first()
         user = TelegramUser.objects.filter(user_id=request.GET.get('user_id')).first()
         if not movie:
-            return Response(data={'error': 'Movie not found'}, status=status.HTTP_400_BAD_REQUEST)
+            return Response(data={'error': 'Movie not found'}, status=status.HTTP_404_NOT_FOUND)
         if not user:
-            return Response(data={'error': 'User not found'}, status=status.HTTP_400_BAD_REQUEST)
+            return Response(data={'error': 'User not found'}, status=status.HTTP_404_NOT_FOUND)
         if movie.subscription_type == 2 and not user.is_subscribed:
             return Response(data={'error': 'This movie is only for premium users'}, status=status.HTTP_400_BAD_REQUEST)
         serializer = MovieSerializer(movie)
@@ -96,7 +96,7 @@ class SavedViewSet(ViewSet):
     def get(self, request, *args, **kwargs):
         user = TelegramUser.objects.filter(user_id=request.GET.get('user_id')).first()
         if not user:
-            return Response(data={'error': 'User not found'}, status=status.HTTP_400_BAD_REQUEST)
+            return Response(data={'error': 'User not found'}, status=status.HTTP_404_NOT_FOUND)
         movies = Saved.objects.filter(user__user_id=user.user_id)
         serializer = SavedSerializer(movies, many=True)
         return Response(data=serializer.data, status=status.HTTP_200_OK)
@@ -119,11 +119,11 @@ class SavedViewSet(ViewSet):
         data = request.data
         user = TelegramUser.objects.filter(user_id=data.get('user_id')).first()
         if not user:
-            return Response(data={'error': 'User not found'}, status=status.HTTP_400_BAD_REQUEST)
+            return Response(data={'error': 'User not found'}, status=status.HTTP_404_NOT_FOUND)
         movie = Saved.objects.filter(user__user_id=data['user_id'], movie_id=data['movie']).first()
         if movie:
             movie.delete()
-            return Response(data={"message": "Successfully deleted"}, status=status.HTTP_200_OK)
+            return Response(data={"message": "Successfully deleted"}, status=status.HTTP_204_NO_CONTENT)
         data['user'] = TelegramUser.objects.filter(user_id=data['user_id']).first().id
         serializer = SavedSerializer(data=data)
         if serializer.is_valid():
