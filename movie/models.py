@@ -45,7 +45,7 @@ class Director(models.Model):
 class Movie(models.Model):
     title = models.CharField(max_length=200)
     subscription_type = models.IntegerField(choices=MOVIE_SUBSCRIPTION_TYPE)
-    p_rating = models.FloatField(default=0)
+    movie_rating = models.FloatField(default=0)
     countries = models.ForeignKey(Country, on_delete=models.CASCADE)
     description = models.TextField()
     release_date = models.DateField()
@@ -54,6 +54,9 @@ class Movie(models.Model):
     actors = models.ManyToManyField(Actor)
     directors = models.ForeignKey(Director, on_delete=models.CASCADE)
 
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
     def __str__(self):
         return self.title
 
@@ -61,7 +64,12 @@ class Movie(models.Model):
 class Saved(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     movie = models.ForeignKey(Movie, on_delete=models.CASCADE)
-    saved_at = models.DateTimeField(auto_now_add=True)
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return self.movie
 
 
 class Comment(models.Model):
@@ -69,9 +77,11 @@ class Comment(models.Model):
     movie = models.ForeignKey(Movie, on_delete=models.CASCADE)
     content = models.TextField()  # message
     rating = models.FloatField(default=0)
-    rated = models.BooleanField(default=False)
 
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
     is_active = models.BooleanField(default=True)
+
+    def __str__(self):
+        return self.user
