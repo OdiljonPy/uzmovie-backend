@@ -52,6 +52,18 @@ class MovieListCreateViewSet(ViewSet):
         return Response(data={'movies': serializer.data}, status=status.HTTP_200_OK)
 
 
+    def list_saved_movies(self, request, *args, **kwargs):
+        user_id = request.user.id
+
+        if user_id is None:
+            return Response({'message': 'User does not exist'}, status=status.HTTP_404_NOT_FOUND)
+
+        saved_movies = Saved.objects.filter(user_id=user_id)
+        movies = [Movie.objects.filter(movie_id=i.movie_id) for i in saved_movies]
+        serializer = MovieSerializer(movies, many=True)
+
+        return Response({'movies': serializer.data}, status=status.HTTP_200_OK)
+
     def retrieve_movie(self, request, *args, **kwargs):
         pk = kwargs.get('pk')
 
@@ -183,15 +195,3 @@ class UtilsViewSet(ViewSet):
         saved_item.delete()
 
         return Response({'message': 'Saved item successfully deleted'}, status=status.HTTP_204_NO_CONTENT)
-
-    def list_saved(self, request, *args, **kwargs):
-        user_id = request.user.id
-
-        if user_id is None:
-            return Response({'message': 'User does not exist'}, status=status.HTTP_404_NOT_FOUND)
-
-        saved_movies = Saved.objects.filter(user_id=user_id)
-        movies = [Movie.objects.filter(movie_id=i.movie_id) for i in saved_movies]
-        serializer = MovieSerializer(movies, many=True)
-
-        return Response({'movies': serializer.data}, status=status.HTTP_200_OK)
