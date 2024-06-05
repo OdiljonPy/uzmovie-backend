@@ -78,10 +78,11 @@ class Comment(models.Model):
     content = models.TextField()  # message
     rating = models.FloatField(default=0)
 
+    is_visible = models.BooleanField(default=True)
+
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
-    is_active = models.BooleanField(default=True)
 
     def __str__(self):
         return self.user
