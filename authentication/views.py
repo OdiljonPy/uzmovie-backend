@@ -72,7 +72,7 @@ class LoginView(ViewSet):
                                                 "profile_picture": profile_picture,
                                                 "password": make_password(password)}, partial=True)
 
-        if not serializer.is_valid:
+        if not serializer.is_valid():
             return Response(serializer.errors, status.HTTP_400_BAD_REQUEST)
         serializer.save()
         return Response(serializer.data, status.HTTP_201_CREATED)
