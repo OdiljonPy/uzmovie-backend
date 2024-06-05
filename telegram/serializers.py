@@ -8,7 +8,7 @@ from .models import Saved, TelegramUser
 class SavedSerializer(ModelSerializer):
     class Meta:
         model = Saved
-        fields = '__all__'
+        fields = ('id', 'user', 'movie', 'created_at', 'updated_at')
 
     def to_representation(self, instance):
         data = super().to_representation(instance)

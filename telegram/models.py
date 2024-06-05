@@ -18,5 +18,8 @@ class Saved(models.Model):
     user = models.ForeignKey(TelegramUser, on_delete=models.CASCADE)
     movie = models.ForeignKey(Movie, on_delete=models.CASCADE, related_name='telegram_saved_movie')
 
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
     def __str__(self):
         return self.movie.title
