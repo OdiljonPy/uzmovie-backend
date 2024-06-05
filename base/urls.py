@@ -7,5 +7,5 @@ urlpatterns = [
     path('contact/create/', ContactViewSet.as_view({'post': 'contact_create'})),
 
     # about us
-    path('list/', AboutViewSet.as_view({'get': 'about_view'})),
+    path('about/', AboutViewSet.as_view({'get': 'about_view'})),
 ]

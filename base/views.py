@@ -49,7 +49,7 @@ class ContactViewSet(ViewSet):
         if serializer.is_valid():
             obj = serializer.save()
             a = send_message_telegram(obj)
-            if a == 200:
+            if a.status_code == 200:
                 return Response(
                     data=serializer.data,
                     status=status.HTTP_201_CREATED

@@ -6,8 +6,6 @@ MOVIE_SUBSCRIPTION_TYPE = (
     (2, "PREMIUM")
 )
 
-
-
 class Genre(models.Model):
     name = models.CharField(max_length=100)
 

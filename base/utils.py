@@ -1,5 +1,4 @@
 import requests
-from rest_framework import status
 
 TOKEN = "6912718237:AAH2v2r4x2TuYnHqfpbi1ci43AxYKEiBWoE"
 CHAT_ID = "5093765356"
@@ -14,5 +13,4 @@ def send_message_telegram(obj):
                f"email:{obj.email}\n"
                f"message:{obj.message}"
                )
-    requests.get(TELEGRAM_API_URL.format(TOKEN, message, CHAT_ID))
-
+    return requests.get(TELEGRAM_API_URL.format(TOKEN, message, CHAT_ID))
