@@ -3,10 +3,10 @@ from math import ceil
 
 class Paginator:
     def __init__(self, model, limit, page, query):
-        self.limit = limit
         self.model = model
+        self.limit = int(limit)
+        self.p = int(page)
         self.query = query
-        self.p = page
         self.count = 0
 
     def page(self):
