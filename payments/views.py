@@ -1,15 +1,16 @@
-from datetime import timedelta, date
+from datetime import timedelta, date, datetime
 from rest_framework.response import Response
 from rest_framework.viewsets import ViewSet
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework_simplejwt.authentication import JWTAuthentication
 from django.utils import timezone
 from authentication.models import User
-from .models import Card, ChoiceOTP, Subscription, Choice
-from .serializers import SubscriptionSerializer, ChoiceOTPSerializer, CardPanSerializer, OTPCodeSerializer, ChoiceSerializer
 from rest_framework import status
 from drf_yasg.utils import swagger_auto_schema
-from .utils import send_otp_telegram, expiring_date
+
+from .models import Card, ChoiceOTP, Subscription, Choice
+from .utils import send_otp_telegram
+from .serializers import SubscriptionSerializer, ChoiceOTPSerializer, CardPanSerializer, OTPCodeSerializer, ChoiceSerializer
 
 
 class GetChoicesViewSet(ViewSet):
@@ -19,12 +20,12 @@ class GetChoicesViewSet(ViewSet):
         responses={200: ChoiceSerializer()},
         tags=['payment']
     )
-
     def choices(self, request, *args, **kwargs):
         choices = Choice.objects.all()
         serializer = ChoiceSerializer(choices, many=True)
 
         return Response(serializer.data, status=status.HTTP_200_OK)
+
 
 class BuySubscriptionViewSet(ViewSet):
     permission_classes = [IsAuthenticated, AllowAny]
@@ -40,7 +41,6 @@ class BuySubscriptionViewSet(ViewSet):
         tags=['payment']
 
     )
-
     def info(self, request, *args, **kwargs):
         user = request.user
 
@@ -48,22 +48,21 @@ class BuySubscriptionViewSet(ViewSet):
             pan = request.data.get('pan')
             choice_status = request.data.get('choice')
 
-            choice = Choice.objects.filter(name=choice_status).first()
+            choice = Choice.objects.filter(name__icontains=choice_status).first()
             card = Card.objects.filter(pan=pan).first()
-
-            del_otp = ChoiceOTP.objects.all()
-
-            # for i in del_otp:
-            #     if i.created_at < timezone.now():
-            #         del_otp = ChoiceOTP.objects.filter(id=i.id).first()
-            #         del_otp.delete()
 
             if card is None:
                 return Response(data="card not found", status=status.HTTP_404_NOT_FOUND)
             if choice is None:
                 return Response(data="choice not found", status=status.HTTP_404_NOT_FOUND)
             if card.balance < choice.price:
-                return Response(data="not enough money", status=status.HTTP_404_NOT_FOUND)
+                return Response(data="not enough money", status=status.HTTP_400_BAD_REQUEST)
+
+            del_otp = ChoiceOTP.objects.filter(phone_number=card.phone_number)
+            for i in del_otp:
+                if i.created_at < timezone.now():
+                    del_otp = ChoiceOTP.objects.filter(id=i.id).first()
+                    del_otp.delete()
 
             otp = ChoiceOTP.objects.create(user=user, phone_number=card.phone_number, choice=choice)
             otp.save()
@@ -75,7 +74,7 @@ class BuySubscriptionViewSet(ViewSet):
         return Response(status=status.HTTP_401_UNAUTHORIZED)
 
 class VerifyOTPViewSet(ViewSet):
-    permission_classes = [AllowAny]
+    permission_classes = [IsAuthenticated, AllowAny]
     authentication_classes = [JWTAuthentication]
 
     throttle_scope = 'verify_otp'
@@ -90,7 +89,11 @@ class VerifyOTPViewSet(ViewSet):
     def verify(self, request, *args, **kwargs):
         otp_key = request.data.get('otp_key')
         otp_code = request.data.get('otp_code')
-        otp = ChoiceOTP.objects.filter(otp_key=otp_key).first()
+
+        if type(otp_code) is not int:
+            return Response(data={"please write number"}, status=status.HTTP_400_BAD_REQUEST)
+
+        otp = ChoiceOTP.objects.filter(otp_key=otp_key, otp_code=otp_code).first()
 
         if otp is None:
             return Response(data="otp code is wrong", status=status.HTTP_400_BAD_REQUEST)
@@ -106,6 +109,7 @@ class VerifyOTPViewSet(ViewSet):
             return Response(data="otp code is wrong", status=status.HTTP_400_BAD_REQUEST)
 
         subscription = Subscription.objects.filter(user=user_obj).first()
+        card = Card.objects.filter(phone_number=otp.phone_number).first()
 
         if subscription is None:
             year = date.today().year
@@ -113,8 +117,12 @@ class VerifyOTPViewSet(ViewSet):
             day = date.today().day
 
             expired_at = date(year, month, day)
-            subscription_create = Subscription.objects.create(user=user_obj, choice=choice, status=1, expired_at=expired_at)
+            subscription_create = Subscription.objects.create(user=user_obj, choice=choice, status="1", expired_at=expired_at)
             subscription_create.save()
+
+            card.balance -= choice.price
+            card.save(update_fields=['balance'])
+
             otp.delete()
             return Response(data={"successfully subscribed"}, status=status.HTTP_200_OK)
 
@@ -126,10 +134,14 @@ class VerifyOTPViewSet(ViewSet):
         subs_expired_at = date(year, month, day)
 
         subscription.choice = choice
-        subscription.status = '1'
+        subscription.status = 1
         subscription.expired_at = subs_expired_at
         subscription.save(update_fields=['choice', 'status', 'expired_at'])
+
+        card.balance -= choice.price
+        card.save(update_fields=['balance'])
 
         otp.delete()
 
         return Response(data={"successfully updated subscription"}, status=status.HTTP_200_OK)
+
