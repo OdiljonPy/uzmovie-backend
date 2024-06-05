@@ -105,12 +105,12 @@ class ResendAndResetViewSet(ViewSet):
             send_code.save()
             send_otp_code_telegram(send_code)
             return Response({'code has been sent'})
-        if not user.is_authenticated:
-            return Response({'/log in please'}, status=status.HTTP_403_FORBIDDEN)
+        # if not user.is_authenticated:
+        #     return Response({'/log in please'}, status=status.HTTP_403_FORBIDDEN)
 
 
 
-        return Response(data={"log in please"}, status=status.HTTP_200_OK)
+        return Response({'/log in please'}, status=status.HTTP_403_FORBIDDEN)
 
 
 
@@ -124,14 +124,14 @@ class ResendAndResetViewSet(ViewSet):
         otp_key = request.data.get('key')
 
         objects = OTPRegisterResend.objects.filter(otp_key=otp_key, otp_code=otp_code).first()
-        print(objects.otp_code, 50*'*')
-        #if checking_number_of_otp(otp_objects):
-        if objects:
-            changed_password = User.objects.filter(id=objects.otp_user_id)
-            changed_password.password = make_password(new_password)
-            #changed_password.save()
-            return Response(data={'changed'}, status=status.HTTP_200_OK)
-        return Response(data={"log in please"}, status=status.HTTP_200_OK)
+        #print(objects.otp_code, 50*'*')
+        if checking_number_of_otp(objects):
+            if objects:
+                changed_password = User.objects.filter(id=objects.otp_user_id)
+                changed_password.password = make_password(new_password)
+                #changed_password.save()
+                return Response(data={'changed'}, status=status.HTTP_200_OK)
+            return Response(data={"log in please"}, status=status.HTTP_200_OK)
 
 
 
