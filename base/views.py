@@ -37,15 +37,14 @@ class ContactViewSet(ViewSet):
         if serializer.is_valid():
             obj = serializer.save()
             response = send_message_telegram(obj)
-            if response.status_code != 200:
-                obj.delete()
+            if response.status_code == 200:
                 return Response(
-                    data=serializer.errors,
-                    status=status.HTTP_400_BAD_REQUEST
+                    data=serializer.data,
+                    status=status.HTTP_201_CREATED
                 )
             return Response(
-                data=serializer.data,
-                status=status.HTTP_201_CREATED
+                data=serializer.errors,
+                status=status.HTTP_400_BAD_REQUEST
             )
 
 
@@ -73,7 +72,7 @@ class AboutViewSet(ViewSet):
         if not request.user.is_authenticated:
             return Response(
                 data={'error': 'Not authenticated'},
-                status=status.HTTP_400_BAD_REQUEST
+                status=status.HTTP_401_UNAUTHORIZED
             )
         serializer = AboutSerializer(About.objects.all(), many=True)
         return Response(

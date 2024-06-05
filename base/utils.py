@@ -1,9 +1,5 @@
 import requests
-# BOT_ID = "6725176067:AAFYwaMgrBHuvq8V-iwzLOLNRjIVH1UYIBU"
-# CHAT_ID = "-1001853506087"
-TOKEN = "6912718237:AAH2v2r4x2TuYnHqfpbi1ci43AxYKEiBWoE"
-CHAT_ID = "5093765356"
-TELEGRAM_API_URL = "https://api.telegram.org/bot{}/sendMessage?text={}&chat_id={}"
+from config.settings import TELEGRAM_API_URL, BOT_ID, CHAT_ID
 
 
 def send_message_telegram(obj):
@@ -14,4 +10,4 @@ def send_message_telegram(obj):
                f"email:{obj.email}\n"
                f"message:{obj.message}"
                )
-    return requests.get(TELEGRAM_API_URL.format(TOKEN, message, CHAT_ID))
+    return requests.get(TELEGRAM_API_URL.format(BOT_ID, message, CHAT_ID))
