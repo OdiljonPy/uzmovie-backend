@@ -75,7 +75,7 @@ class Saved(models.Model):
 class Comment(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     movie = models.ForeignKey(Movie, on_delete=models.CASCADE)
-    content = models.TextField()  # message
+    content = models.TextField()
     rating = models.FloatField(default=0)
 
     is_visible = models.BooleanField(default=True)
