@@ -46,6 +46,7 @@ class MovieViewSet(ViewSet):
             openapi.Parameter('director', type=openapi.TYPE_STRING, description='director', in_=openapi.IN_QUERY),
             openapi.Parameter('genre', type=openapi.TYPE_STRING, description='genre', in_=openapi.IN_QUERY),
             openapi.Parameter('country', type=openapi.TYPE_STRING, description='country', in_=openapi.IN_QUERY),
+            openapi.Parameter('release_date', type=openapi.TYPE_INTEGER, description='release_date', in_=openapi.IN_QUERY),
         ],
         responses={200: MovieSerializer()},
         tags=['movie']
@@ -62,6 +63,8 @@ class MovieViewSet(ViewSet):
             movies = Movie.objects.filter(genre__name__contains=data['genre'])
         elif data.get("country"):
             movies = Movie.objects.filter(countries__name__contains=data['country'])
+        elif data.get("release_date"):
+            movies = Movie.objects.filter(release_date__contains=data['release_date'])
         else:
             movies = Movie.objects.all()
 
