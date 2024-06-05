@@ -24,13 +24,13 @@ class SearchViewSet(ViewSet):
         tags=['movie']
     )
     def search(self, request, *args, **kwargs):
-        data = request.GET
-        search = data.get('search')
+        search = request.GET.get('search')
         movies = Movie.objects.filter(title__icontains=search)  # faqat namesi bo`yicha search
-        if movies is None:
-            return Response(data={'error': 'Not found'}, status=status.HTTP_404_NOT_FOUND)
-
         serializer = MovieSerializer(movies, many=True)
+
+        if movies is None:
+            return Response(data=serializer.data, status=status.HTTP_404_NOT_FOUND)
+
         return Response(data=serializer.data, status=status.HTTP_200_OK)
 
 
@@ -102,20 +102,6 @@ class MovieViewSet(ViewSet):
 
 
 class CommentViewSet(ViewSet):
-    # list
-    @swagger_auto_schema(
-        operation_description="List of all Comments",
-        operation_summary="List of all Comments",
-        responses={200: CommentSerializer()},
-        tags=['movie']
-    )
-    def comment_list(self, request, *args, **kwargs):
-        if not request.user.is_authenticated:
-            return Response(data={'error': 'Not authenticated'}, status=status.HTTP_404_NOT_FOUND)
-        comment = Comment.objects.all()
-        serializer = CommentSerializer(comment, many=True)
-        return Response(data={'comments': serializer.data}, status=status.HTTP_200_OK)
-
     # review
     @swagger_auto_schema(
         operation_description="Review Comment by id",
@@ -131,15 +117,15 @@ class CommentViewSet(ViewSet):
         },
         tags=['movie']
     )
-    def comment_review(self, request, *args, **kwargs):
+    def get_by_id(self, request, *args, **kwargs):
         if not request.user.is_authenticated:
-            return Response(data={'error': 'Not authenticated'}, status=status.HTTP_404_NOT_FOUND)
+            return Response(data={'error': 'Not authenticated'}, status=status.HTTP_401_UNAUTHORIZED)
 
         comment = Comment.objects.filter(id=kwargs['pk']).first()
         if comment is None:
-            return Response(data={'error': 'Not found'}, status=status.HTTP_404_NOT_FOUND)
+            return Response(data={'error': 'Comment not found'}, status=status.HTTP_404_NOT_FOUND)
 
-        return Response(data={'comment': CommentSerializer(comment).data}, status=status.HTTP_200_OK)
+        return Response(data=CommentSerializer(comment).data, status=status.HTTP_200_OK)
 
     # create
     @swagger_auto_schema(
