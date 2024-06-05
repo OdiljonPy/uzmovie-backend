@@ -17,5 +17,5 @@ urlpatterns = [
     # COMMENT
     path('comment/', CommentViewSet.as_view({'post': 'comment_create'})),
     path('comment/<int:pk>/', CommentViewSet.as_view({'delete': 'comment_destroy'})),
-    path('comment/<int:pk>/', CommentViewSet.as_view({'get': 'comment_review'})),
+    path('comment/<int:pk>/', CommentViewSet.as_view({'get': 'get_by_id'})),
 ]
