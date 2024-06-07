@@ -146,43 +146,32 @@ class CommentViewSet(ViewSet):
         tags=['movie']
     )
     def comment_create(self, request, *args, **kwargs):
-        # rating = request.data.get('rating')
-        r_movie = Movie.objects.filter(id=request.data['movie']).first()
-        myuser_id = request.user
+        movie = Movie.objects.filter(id=request.data['movie']).first()
+        user = request.user
 
         if not request.user.is_authenticated:
-            return Response(data={'error': 'Not authenticated'}, status=status.HTTP_404_NOT_FOUND)
+            return Response(data={'error': 'Not authenticated'}, status=status.HTTP_401_UNAUTHORIZED)
 
-        request.data['user'] = myuser_id.id
+        request.data['user'] = user.id
         serializer = CommentSerializer(data=request.data)
 
         if serializer.is_valid():
             serializer.validated_data['user'] = myuser_id
-            check = Comment.objects.filter(user=myuser_id, movie=request.data['movie']).first()
-            check2 = Comment.objects.filter(user=myuser_id, movie=request.data['movie'], rated=True).first()
-            rr = request.data['rating']
-            if check is None or check2 is None:
-                if rr > 10 or rr < 0:
-                    return Response(
-                        data={'error': 'You have to enter number that 1 to 10'}, status=status.HTTP_400_BAD_REQUEST
-                    )
-                serializer.validated_data['rated'] = True
-                serializer.save()
-                comments = Comment.objects.filter(movie=request.data['movie'], rated=True)
-                s = 0
-                l = 0
-                for comment in comments:
-                    s += comment.rating
-                    l += 1
+            comment = Comment.objects.filter(author=user, movie=movie, rating__gt=0).first()
+            rate_comment = Comment.objects.filter(movie=movie, rating__gt=0)
 
-                r_movie.p_rating = s / l
-                r_movie.save(update_fields=['p_rating'])
+            if comment is None:
+                serializer.save()
+                average = rate_comment.aggregate(Avg('rating'))['rating__avg']
+                average = round(average, 2)
+                movie.movie_rating = average
+                movie.save(update_fields=['movie_rating'])
                 return Response(data=serializer.data, status=status.HTTP_201_CREATED)
 
             serializer.validated_data['rating'] = 0
             serializer.save()
             return Response(data=serializer.data, status=status.HTTP_201_CREATED)
-        return Response(data=serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     # destroy
     @swagger_auto_schema(
