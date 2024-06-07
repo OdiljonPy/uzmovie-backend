@@ -28,33 +28,32 @@ class MovieViewSet(ViewSet):
     )
     def filter(self, request, *args, **kwargs):
         data = request.GET
-        page = 1
-        if data.get('page'):
-            page = int(data['page'])
-        size = 2
-        if data.get('size'):
-            size = int(data['size'])
-        if data.get("title"):
-            query = f"SELECT * FROM movie_movie WHERE title LIKE '%{data['title']}%'"
-            paginator = Paginator(Movie, size, page, query)
-            movies = paginator.page()
-        elif data.get("actor"):
-            query = f"SELECT * FROM movie_movie m JOIN movie_movie_actors ma ON m.id = ma.movie_id JOIN movie_actor a ON (ma.actor_id = a.id) WHERE a.name LIKE '%{data['actor']}%'"
-            paginator = Paginator(Movie, size, page, query)
-            movies = paginator.page()
-        elif data.get("director"):
-            query = f"SELECT * FROM movie_movie m JOIN movie_director d ON m.directors_id = d.id WHERE d.name LIKE '%{data['director']}%'"
-            paginator = Paginator(Movie, size, page, query)
-            movies = paginator.page()
-        elif data.get("genre"):
-            query = f"SELECT * FROM movie_movie m JOIN movie_movie_genre mg ON m.id = mg.movie_id JOIN movie_genre g ON mg.genre_id = g.id WHERE g.name = '{data['genre'].capitalize()}'"
-            paginator = Paginator(Movie, size, page, query)
-            movies = paginator.page()
-        else:
-            query = "SELECT * FROM movie_movie"
-            paginator = Paginator(Movie, size, page, query)
-            movies = paginator.page()
+        page = data.get('page', 1)
+        size = data.get('size', 2)
 
+        if not str(page).isdigit() or int(page) < 1:
+            return Response(data={'error': 'page must be greater than 0'}, status=status.HTTP_400_BAD_REQUEST)
+        if not str(size).isdigit() or int(size) < 1:
+            return Response(data={'error': 'size must be greater than 0'}, status=status.HTTP_400_BAD_REQUEST)
+
+        query = "SELECT * FROM movie_movie m "
+        condition = "WHERE "
+        if data.get("actor"):
+            query += "JOIN movie_movie_actors ma ON m.id = ma.movie_id JOIN movie_actor a ON ma.actor_id = a.id "
+            condition += f"a.name LIKE '%{data['actor']}%' and "
+        if data.get("director"):
+            query += "JOIN movie_director d ON m.directors_id = d.id "
+            condition += f"d.name LIKE '%{data['director']}%' and "
+        if data.get("genre"):
+            query += f"JOIN movie_movie_genre mg ON m.id = mg.movie_id JOIN movie_genre g ON mg.genre_id = g.id "
+            condition += f"g.name = '{data['genre'].capitalize()}' and "
+        if data.get("title"):
+            condition += f"m.title LIKE '%{data['title'].capitalize()}%' and "
+
+        paginator = Paginator(Movie, size, page, query)
+        if condition.find('and') != -1:
+            paginator = Paginator(Movie, size, page, query + condition[:len(condition) - 4])
+        movies = paginator.page()
         serializer = MovieSerializer(movies, many=True)
         return Response(data=serializer.data, status=status.HTTP_200_OK)
 
@@ -72,9 +71,9 @@ class MovieViewSet(ViewSet):
         movie = Movie.objects.filter(id=kwargs['pk']).first()
         user = TelegramUser.objects.filter(user_id=request.GET.get('user_id')).first()
         if not movie:
-            return Response(data={'error': 'Movie not found'}, status=status.HTTP_400_BAD_REQUEST)
+            return Response(data={'error': 'Movie not found'}, status=status.HTTP_404_NOT_FOUND)
         if not user:
-            return Response(data={'error': 'User not found'}, status=status.HTTP_400_BAD_REQUEST)
+            return Response(data={'error': 'User not found'}, status=status.HTTP_404_NOT_FOUND)
         if movie.subscription_type == 2 and not user.is_subscribed:
             return Response(data={'error': 'This movie is only for premium users'}, status=status.HTTP_400_BAD_REQUEST)
         serializer = MovieSerializer(movie)
@@ -96,7 +95,7 @@ class SavedViewSet(ViewSet):
     def get(self, request, *args, **kwargs):
         user = TelegramUser.objects.filter(user_id=request.GET.get('user_id')).first()
         if not user:
-            return Response(data={'error': 'User not found'}, status=status.HTTP_400_BAD_REQUEST)
+            return Response(data={'error': 'User not found'}, status=status.HTTP_404_NOT_FOUND)
         movies = Saved.objects.filter(user__user_id=user.user_id)
         serializer = SavedSerializer(movies, many=True)
         return Response(data=serializer.data, status=status.HTTP_200_OK)
@@ -117,13 +116,13 @@ class SavedViewSet(ViewSet):
     )
     def post(self, request, *args, **kwargs):
         data = request.data
-        user = TelegramUser.objects.filter(user_id=request.GET.get('user_id')).first()
+        user = TelegramUser.objects.filter(user_id=data.get('user_id')).first()
         if not user:
-            return Response(data={'error': 'User not found'}, status=status.HTTP_400_BAD_REQUEST)
+            return Response(data={'error': 'User not found'}, status=status.HTTP_404_NOT_FOUND)
         movie = Saved.objects.filter(user__user_id=data['user_id'], movie_id=data['movie']).first()
         if movie:
             movie.delete()
-            return Response(data={"message": "Successfully deleted"}, status=status.HTTP_200_OK)
+            return Response(data={"message": "Successfully deleted"}, status=status.HTTP_204_NO_CONTENT)
         data['user'] = TelegramUser.objects.filter(user_id=data['user_id']).first().id
         serializer = SavedSerializer(data=data)
         if serializer.is_valid():
