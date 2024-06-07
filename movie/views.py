@@ -25,11 +25,21 @@ class SearchViewSet(ViewSet):
     )
     def search(self, request, *args, **kwargs):
         search = request.GET.get('search')
-        movies = Movie.objects.filter(title__icontains=search)  # faqat namesi bo`yicha search
-        serializer = MovieSerializer(movies, many=True)
+        page = int(request.GET.get('page', 1))
+        size = int(request.GET.get('size'))
+        movies = Movie.objects.all
 
-        if movies is None:
-            return Response(data=serializer.data, status=status.HTTP_404_NOT_FOUND)
+        if not str(page).isdigit() or int(page) < 1:
+            return Response(data={'error': 'page must be greater than 0'}, status=status.HTTP_400_BAD_REQUEST)
+        if not str(size).isdigit() or int(size) < 1:
+            return Response(data={'error': 'size must be greater than 0'}, status=status.HTTP_400_BAD_REQUEST)
+
+        if search is not None:
+            movies = Movie.objects.filter(Q(title__icontains=search) | Q(description__icontains=search))
+
+        start = (page - 1) * size
+        end = page * size
+        serializer = MovieSerializer(movies[start:end], many=True)
 
         return Response(data=serializer.data, status=status.HTTP_200_OK)
 
