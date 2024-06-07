@@ -211,23 +211,17 @@ class CommentViewSet(ViewSet):
                 data={'error': 'You do not have permission to delete this comment'}, status=status.HTTP_400_BAD_REQUEST
             )
         comment.delete()
-        r_movie = Movie.objects.filter(id=comment.movie_id).first()
-        comments = Comment.objects.filter(
-            movie=comment.movie_id, rated=True
-        )
-        if comments == []:
-            s = 0
-            l = 0
-            for comment in comments:
-                s += comment.rating
-                l += 1
 
-            r_movie.p_rating = s / l
-            r_movie.save(update_fields=['p_rating'])
-            return Response(data={'message': 'Successfully deleted'}, status=status.HTTP_200_OK)
+        movie = Movie.objects.filter(id=request.data['movie']).first()
+        rate_comment = Comment.objects.filter(movie=movie, rating__gt=0)
+        average = rate_comment.aggregate(Avg('rating'))['rating__avg']
 
-        r_movie.p_rating = 0
-        r_movie.save(update_fields=['p_rating'])
+        if rate_comment != [] and average is not None:
+            movie.overall_rating = average
+            movie.save(update_fields=['movie_rating'])
+
+        movie.overall_rating = 0
+        movie.save(update_fields=['movie_rating'])
         return Response(data={'message': 'Successfully deleted'}, status=status.HTTP_200_OK)
 
 
