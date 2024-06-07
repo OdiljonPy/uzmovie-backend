@@ -6,7 +6,7 @@ class ContactAdmin(admin.ModelAdmin):
     list_display = ('id', 'first_name', 'phone_number', 'is_solved', 'status')
     search_fields = ['first_name']
     list_display_links = ['id', 'first_name']
-    list_editable = ['is_solved', 'status']
+    list_editable = ['is_solved']
     actions = ('contact_status_published',)
 
     def contact_status_published(self, request, queryset):
