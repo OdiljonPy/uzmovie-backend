@@ -43,13 +43,6 @@ class Director(models.Model):
         return self.name
 
 
-class Type(models.Model):
-    name = models.CharField(max_length=100)
-
-    def __str__(self):
-        return self.name
-
-
 class Movie(models.Model):
     title = models.CharField(max_length=200)
     subscription_type = models.IntegerField(choices=MOVIE_SUBSCRIPTION_TYPE)

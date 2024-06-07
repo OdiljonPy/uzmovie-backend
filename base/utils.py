@@ -1,9 +1,6 @@
 import requests
-from rest_framework import status
-
-TOKEN = "6912718237:AAH2v2r4x2TuYnHqfpbi1ci43AxYKEiBWoE"
-CHAT_ID = "5093765356"
-TELEGRAM_API_URL = "https://api.telegram.org/bot{}/sendMessage?text={}&chat_id={}"
+from django.core.exceptions import ValidationError
+from config.settings import TELEGRAM_API_URL, BOT_ID, CHAT_ID
 
 
 def send_message_telegram(obj):
@@ -14,5 +11,10 @@ def send_message_telegram(obj):
                f"email:{obj.email}\n"
                f"message:{obj.message}"
                )
-    requests.get(TELEGRAM_API_URL.format(TOKEN, message, CHAT_ID))
+    return requests.get(TELEGRAM_API_URL.format(BOT_ID, message, CHAT_ID))
 
+
+def phone_number_validation(phone_number):
+    if len(phone_number) == 13 and phone_number[:4] == '+998' and phone_number[1:13].isdigit():
+        return True
+    raise ValidationError('phone_number is invalid')
