@@ -1,3 +1,4 @@
+from django.db.models import Q, Avg
 from drf_yasg import openapi
 from drf_yasg.utils import swagger_auto_schema
 from rest_framework.response import Response
@@ -26,8 +27,8 @@ class SearchViewSet(ViewSet):
     def search(self, request, *args, **kwargs):
         search = request.GET.get('search')
         page = int(request.GET.get('page', 1))
-        size = int(request.GET.get('size'))
-        movies = Movie.objects.all
+        size = int(request.GET.get('size', 10))
+        movies = Movie.objects.all()
 
         if not str(page).isdigit() or int(page) < 1:
             return Response(data={'error': 'page must be greater than 0'}, status=status.HTTP_400_BAD_REQUEST)
@@ -56,7 +57,8 @@ class MovieViewSet(ViewSet):
             openapi.Parameter('director', type=openapi.TYPE_STRING, description='director', in_=openapi.IN_QUERY),
             openapi.Parameter('genre', type=openapi.TYPE_STRING, description='genre', in_=openapi.IN_QUERY),
             openapi.Parameter('country', type=openapi.TYPE_STRING, description='country', in_=openapi.IN_QUERY),
-            openapi.Parameter('release_date', type=openapi.TYPE_INTEGER, description='release_date', in_=openapi.IN_QUERY),
+            openapi.Parameter('release_date', type=openapi.TYPE_INTEGER, description='release_date',
+                              in_=openapi.IN_QUERY),
         ],
         responses={200: MovieSerializer()},
         tags=['movie']
@@ -72,7 +74,7 @@ class MovieViewSet(ViewSet):
         elif data.get("genre"):
             movies = Movie.objects.filter(genre__name__contains=data['genre'])
         elif data.get("country"):
-            movies = Movie.objects.filter(countries__name__contains=data['country'])
+            movies = Movie.objects.filter(country__name__contains=data['country'])
         elif data.get("release_date"):
             movies = Movie.objects.filter(release_date__contains=data['release_date'])
         else:
@@ -90,7 +92,7 @@ class MovieViewSet(ViewSet):
     def get_by_id(self, request, *args, **kwargs):
         user = request.user
         if not request.user.is_authenticated:
-            return Response(data={'error': 'Not authenticated'}, status=status.HTTP_404_NOT_FOUND)
+            return Response(data={'error': 'Not authenticated'}, status=status.HTTP_401_UNAUTHORIZED)
 
         movie = Movie.objects.filter(id=kwargs['pk']).first()
         if movie is None:
@@ -118,7 +120,7 @@ class CommentViewSet(ViewSet):
         operation_summary="Review Comment by id",
         manual_parameters=[
             openapi.Parameter(
-                'id', type=openapi.TYPE_INTEGER, description='Comment id', in_=openapi.IN_QUERY, required=True
+                'id', type=openapi.TYPE_INTEGER, description='Comment id', in_=openapi.IN_BODY, required=True
             )
         ],
         responses={
@@ -143,11 +145,11 @@ class CommentViewSet(ViewSet):
         operation_summary="Create Comment",
         manual_parameters=[
             openapi.Parameter(
-                'movie id', type=openapi.TYPE_INTEGER, description='movie id', in_=openapi.IN_QUERY, required=True),
+                'movie', type=openapi.TYPE_INTEGER, description='movie_id', in_=openapi.IN_BODY, required=True),
             openapi.Parameter(
-                'content', type=openapi.TYPE_STRING, description='message', in_=openapi.IN_QUERY, required=True),
+                'content', type=openapi.TYPE_STRING, description='message', in_=openapi.IN_BODY, required=True),
             openapi.Parameter(
-                'rating', type=openapi.TYPE_INTEGER, description='rating', in_=openapi.IN_QUERY, required=True),
+                'rating', type=openapi.TYPE_INTEGER, description='rating', in_=openapi.IN_BODY, required=True),
         ],
         responses={
             404: 'Not Found',
@@ -157,6 +159,11 @@ class CommentViewSet(ViewSet):
     )
     def comment_create(self, request, *args, **kwargs):
         movie = Movie.objects.filter(id=request.data['movie']).first()
+        if movie is None:
+            return Response(
+                status=status.HTTP_404_NOT_FOUND,
+                data={'message': 'Movie Not Found'}
+            )
         user = request.user
 
         if not request.user.is_authenticated:
@@ -166,8 +173,8 @@ class CommentViewSet(ViewSet):
         serializer = CommentSerializer(data=request.data)
 
         if serializer.is_valid():
-            serializer.validated_data['user'] = myuser_id
-            comment = Comment.objects.filter(author=user, movie=movie, rating__gt=0).first()
+            serializer.validated_data['user'] = user
+            comment = Comment.objects.filter(user=user, movie=movie, rating__gt=0).first()
             rate_comment = Comment.objects.filter(movie=movie, rating__gt=0)
 
             if comment is None:
@@ -206,13 +213,18 @@ class CommentViewSet(ViewSet):
         if comment is None:
             return Response(data={'error': 'Comment not found'}, status=status.HTTP_404_NOT_FOUND)
 
-        elif comment.user != request.user:
+        if comment.user != request.user:
             return Response(
                 data={'error': 'You do not have permission to delete this comment'}, status=status.HTTP_400_BAD_REQUEST
             )
         comment.delete()
 
-        movie = Movie.objects.filter(id=request.data['movie']).first()
+        movie = Movie.objects.filter(id=comment.movie.id).first()
+        if movie is None:
+            return Response(
+                status=status.HTTP_404_NOT_FOUND,
+                data={'message': 'Movie Not Found'}
+            )
         rate_comment = Comment.objects.filter(movie=movie, rating__gt=0)
         average = rate_comment.aggregate(Avg('rating'))['rating__avg']
 
@@ -226,13 +238,12 @@ class CommentViewSet(ViewSet):
 
 
 class SavedViewSet(ViewSet):
-    permission_classes = [IsAuthenticated]
 
     @swagger_auto_schema(
         operation_description="Saved movie by id",
         operation_summary="Saved movie by id",
         manual_parameters=[
-            openapi.Parameter('saved', type=openapi.TYPE_INTEGER, description='saved', in_=openapi.IN_QUERY),
+            openapi.Parameter('saved', type=openapi.TYPE_INTEGER, description='saved', in_=openapi.IN_BODY),
         ],
         responses={
             200: MovieSerializer(),
@@ -246,8 +257,8 @@ class SavedViewSet(ViewSet):
                 status=status.HTTP_401_UNAUTHORIZED,
                 data={'detail': 'Not authenticated'},
             )
-        my_user = User.objects.filter(id=request.user.id).first()
-        if not my_user:
+        user = User.objects.filter(id=request.user.id).first()
+        if not user:
             return Response(
                 status=status.HTTP_404_NOT_FOUND,
                 data={'detail': 'User not found'},
@@ -260,9 +271,9 @@ class SavedViewSet(ViewSet):
                 data={'detail': 'Movie not found'},
             )
 
-        save = Saved.objects.filter(user=my_user, movie=movie).first()
+        save = Saved.objects.filter(user=user, movie=movie).first()
         if save is None:
-            save = Saved.objects.create(user_id=my_user.id, movie_id=kwargs['pk'])
+            save = Saved.objects.create(user_id=user.id, movie_id=kwargs['pk'])
             save.save()
             return Response(
                 status=status.HTTP_201_CREATED,
@@ -284,7 +295,12 @@ class SavedViewSet(ViewSet):
         },
         tags=['movie']
     )
-    def list_movie(self, request, *args, **kwargs):
+    def saved(self, request, *args, **kwargs):
+        if not request.user.is_authenticated:
+            return Response(
+                status=status.HTTP_401_UNAUTHORIZED,
+                data={'detail': 'Not authenticated'},
+            )
         user = request.user
         save = Saved.objects.filter(user=user)
         serializer = SavedSerializer(save, many=True)

@@ -53,19 +53,22 @@ class MovieSerializer(serializers.ModelSerializer):
     class Meta:
         model = Movie
         fields = (
-            'id', 'title', 'p_rating', 'description',
-            'release_date', 'subscription_type', 'directors', 'genres', 'actors', 'countries', 'language'
+            'id', 'title', 'movie_rating', 'description',
+            'release_date', 'subscription_type', 'directors', 'genres', 'actors', 'country', 'language'
         )
 
     def to_representation(self, instance):
         data = super().to_representation(instance)
-        data['directors'] = {
-            "id": instance.directors.id,
-            "name": instance.directors.name
-        }
-        data['countries'] = {
-            "id": instance.countries.id,
-            "name": instance.countries.name
+        data['directors'] = [
+            {
+                "id": director.id,
+                "name": director.name
+            }
+            for director in instance.directors.all()
+        ]
+        data['country'] = {
+            "id": instance.country.id,
+            "name": instance.country.name
         }
         data['language'] = {
             "id": instance.language.id,
