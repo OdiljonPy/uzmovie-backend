@@ -30,31 +30,30 @@ class MovieViewSet(ViewSet):
         data = request.GET
         page = data.get('page', 1)
         size = data.get('size', 2)
+
         if not str(page).isdigit() or int(page) < 1:
             return Response(data={'error': 'page must be greater than 0'}, status=status.HTTP_400_BAD_REQUEST)
         if not str(size).isdigit() or int(size) < 1:
             return Response(data={'error': 'size must be greater than 0'}, status=status.HTTP_400_BAD_REQUEST)
-        if data.get("title"):
-            query = f"SELECT * FROM movie_movie WHERE title LIKE '%{data['title'].capitalize()}%'"
-            paginator = Paginator(Movie, size, page, query)
-            movies = paginator.page()
-        elif data.get("actor"):
-            query = f"SELECT * FROM movie_movie m JOIN movie_movie_actors ma ON m.id = ma.movie_id JOIN movie_actor a ON (ma.actor_id = a.id) WHERE a.name LIKE '%{data['actor']}%'"
-            paginator = Paginator(Movie, size, page, query)
-            movies = paginator.page()
-        elif data.get("director"):
-            query = f"SELECT * FROM movie_movie m JOIN movie_director d ON m.directors_id = d.id WHERE d.name LIKE '%{data['director']}%'"
-            paginator = Paginator(Movie, size, page, query)
-            movies = paginator.page()
-        elif data.get("genre"):
-            query = f"SELECT * FROM movie_movie m JOIN movie_movie_genre mg ON m.id = mg.movie_id JOIN movie_genre g ON mg.genre_id = g.id WHERE g.name = '{data['genre'].capitalize()}'"
-            paginator = Paginator(Movie, size, page, query)
-            movies = paginator.page()
-        else:
-            query = "SELECT * FROM movie_movie"
-            paginator = Paginator(Movie, size, page, query)
-            movies = paginator.page()
 
+        query = "SELECT * FROM movie_movie m "
+        condition = "WHERE "
+        if data.get("actor"):
+            query += "JOIN movie_movie_actors ma ON m.id = ma.movie_id JOIN movie_actor a ON ma.actor_id = a.id "
+            condition += f"a.name LIKE '%{data['actor']}%' and "
+        if data.get("director"):
+            query += "JOIN movie_director d ON m.directors_id = d.id "
+            condition += f"d.name LIKE '%{data['director']}%' and "
+        if data.get("genre"):
+            query += f"JOIN movie_movie_genre mg ON m.id = mg.movie_id JOIN movie_genre g ON mg.genre_id = g.id "
+            condition += f"g.name = '{data['genre'].capitalize()}' and "
+        if data.get("title"):
+            condition += f"m.title LIKE '%{data['title'].capitalize()}%' and "
+
+        paginator = Paginator(Movie, size, page, query)
+        if condition.find('and') != -1:
+            paginator = Paginator(Movie, size, page, query + condition[:len(condition) - 4])
+        movies = paginator.page()
         serializer = MovieSerializer(movies, many=True)
         return Response(data=serializer.data, status=status.HTTP_200_OK)
 
