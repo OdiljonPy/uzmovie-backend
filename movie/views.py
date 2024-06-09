@@ -6,7 +6,6 @@ from rest_framework.viewsets import ViewSet
 from .models import Movie, Saved, Comment
 from rest_framework import status
 from .serializers import MovieSerializer, CommentSerializer, SavedSerializer
-from rest_framework.permissions import IsAuthenticated
 from authentication.models import User
 from payments.utils import check_status
 
@@ -52,13 +51,13 @@ class MovieViewSet(ViewSet):
         operation_description="Filter Movies",
         operation_summary="Filter Movies",
         manual_parameters=[
-            openapi.Parameter('title', type=openapi.TYPE_STRING, description='title', in_=openapi.IN_QUERY),
-            openapi.Parameter('actor', type=openapi.TYPE_STRING, description='actor', in_=openapi.IN_QUERY),
-            openapi.Parameter('director', type=openapi.TYPE_STRING, description='director', in_=openapi.IN_QUERY),
-            openapi.Parameter('genre', type=openapi.TYPE_STRING, description='genre', in_=openapi.IN_QUERY),
-            openapi.Parameter('country', type=openapi.TYPE_STRING, description='country', in_=openapi.IN_QUERY),
+            openapi.Parameter('title', type=openapi.TYPE_STRING, description='title', in_=openapi.IN_BODY),
+            openapi.Parameter('actor', type=openapi.TYPE_STRING, description='actor', in_=openapi.IN_BODY),
+            openapi.Parameter('director', type=openapi.TYPE_STRING, description='director', in_=openapi.IN_BODY),
+            openapi.Parameter('genre', type=openapi.TYPE_STRING, description='genre', in_=openapi.IN_BODY),
+            openapi.Parameter('country', type=openapi.TYPE_STRING, description='country', in_=openapi.IN_BODY),
             openapi.Parameter('release_date', type=openapi.TYPE_INTEGER, description='release_date',
-                              in_=openapi.IN_QUERY),
+                              in_=openapi.IN_BODY),
         ],
         responses={200: MovieSerializer()},
         tags=['movie']
@@ -86,6 +85,9 @@ class MovieViewSet(ViewSet):
     @swagger_auto_schema(
         operation_description="Get One Movie",
         operation_summary="Get One Movie",
+        manual_parameters=[
+            openapi.Parameter('get', type=openapi.TYPE_STRING, description='get by id', in_=openapi.IN_BODY)
+        ],
         responses={200: MovieSerializer()},
         tags=['movie']
     )
@@ -97,15 +99,26 @@ class MovieViewSet(ViewSet):
         movie = Movie.objects.filter(id=kwargs['pk']).first()
         if movie is None:
             return Response(data={'error': 'Movie not found'}, status=status.HTTP_404_NOT_FOUND)
+
         is_premium = check_status(user, movie)
         if is_premium.data == {'ok': True}:
             comment = Comment.objects.filter(movie_id=movie)
-            serializer = CommentSerializer(comment, many=True)
+            comment_serializer = CommentSerializer(comment, many=True)
+            genres = movie.genres.all()
+            actors = movie.actors.all()
+            directors = movie.directors.all()
+
+            recommendation = Movie.objects.filter(
+                Q(genres__in=genres) | Q(actors__in=actors) | Q(directors__in=directors)
+            ).exclude(id=movie.id).distinct()[:5]
+
+            recommendation_serializer = MovieSerializer(recommendation, many=True)
             return Response(
                 status=status.HTTP_200_OK,
                 data={
                     'movie': MovieSerializer(movie).data,
-                    'comments': serializer.data
+                    'comments': comment_serializer.data,
+                    'recommendation': recommendation_serializer.data
                 })
         return Response(
             status=status.HTTP_400_BAD_REQUEST,
@@ -196,7 +209,7 @@ class CommentViewSet(ViewSet):
         operation_summary="Delete Comment bt id",
         manual_parameters=[
             openapi.Parameter(
-                'id', type=openapi.TYPE_INTEGER, description='comment id', in_=openapi.IN_QUERY, required=True)
+                'id', type=openapi.TYPE_INTEGER, description='comment id', in_=openapi.IN_BODY, required=True)
         ],
         responses={
             404: 'Not Found',
@@ -243,7 +256,7 @@ class SavedViewSet(ViewSet):
         operation_description="Saved movie by id",
         operation_summary="Saved movie by id",
         manual_parameters=[
-            openapi.Parameter('saved', type=openapi.TYPE_INTEGER, description='saved', in_=openapi.IN_BODY),
+            openapi.Parameter('save', type=openapi.TYPE_INTEGER, description='save', in_=openapi.IN_BODY),
         ],
         responses={
             200: MovieSerializer(),
@@ -289,6 +302,9 @@ class SavedViewSet(ViewSet):
     @swagger_auto_schema(
         operation_description="Saved movie list",
         operation_summary="Saved movie list",
+        manual_parameters=[
+            openapi.Parameter('saved', type=openapi.TYPE_INTEGER, description='saved', in_=openapi.IN_BODY),
+        ],
         responses={
             200: MovieSerializer(),
             404: 'Not found'
