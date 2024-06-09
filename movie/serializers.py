@@ -36,6 +36,18 @@ class SavedSerializer(serializers.ModelSerializer):
         model = Saved
         fields = ('user', 'movie')
 
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+        data['user'] = {
+            "id": instance.user.id,
+            "username": instance.user.username,
+        }
+        data['movie'] = {
+            "id": instance.movie.id,
+            "title": instance.movie.title,
+        }
+        return data
+
 
 class GenreSerializer(serializers.ModelSerializer):
     class Meta:
@@ -59,29 +71,11 @@ class MovieSerializer(serializers.ModelSerializer):
 
     def to_representation(self, instance):
         data = super().to_representation(instance)
-        data['directors'] = [
-            {
-                "id": director.id,
-                "name": director.name
-            }
-            for director in instance.directors.all()
-        ]
-        data['country'] = {
-            "id": instance.country.id,
-            "name": instance.country.name
-        }
-        data['language'] = {
-            "id": instance.language.id,
-            "name": instance.language.name
-        }
-        data['genres'] = [
-            {"id": genre.id, "name": genre.name} for genre in instance.genres.all()
-        ]
-        data['actors'] = [
-            {"id": actor.id, "name": actor.name} for actor in instance.actors.all()
-        ]
-        data['subscription_type'] = {
-            "id": instance.subscription_type,
-            "name": instance.get_subscription_type_display()
-        }
+        data['country'] = {"id": instance.country.id, "name": instance.country.name}
+        data['language'] = {"id": instance.language.id, "name": instance.language.name}
+        data['subscription_type'] = {"id": instance.subscription_type, "name": instance.get_subscription_type_display()}
+        data['genres'] = list(map(lambda genre: {"id": genre.id, "name": genre.name}, instance.genres.all()))
+        data['actors'] = list(map(lambda actor: {"id": actor.id, "name": actor.name}, instance.actors.all()))
+        data['directors'] = list(
+            map(lambda director: {"id": director.id, "name": director.name}, instance.directors.all()))
         return data
