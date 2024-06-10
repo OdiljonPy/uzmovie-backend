@@ -30,6 +30,7 @@ class Language(models.Model):
 
 class Actor(models.Model):
     name = models.CharField(max_length=100)
+    image = models.ImageField(upload_to="actors/")
 
     def __str__(self):
         return self.name
@@ -37,9 +38,14 @@ class Actor(models.Model):
 
 class Director(models.Model):
     name = models.CharField(max_length=100)
+    image = models.ImageField(upload_to="directors/")
 
     def __str__(self):
         return self.name
+
+
+class MovieImage(models.Model):
+    images = models.ImageField(upload_to='movie_scenes')
 
 
 class Movie(models.Model):
@@ -53,6 +59,10 @@ class Movie(models.Model):
     genres = models.ManyToManyField(Genre)
     actors = models.ManyToManyField(Actor)
     directors = models.ManyToManyField(Director)
+
+    video = models.FileField(upload_to='movie_videos/')
+    image = models.ImageField(upload_to='movie_images/')
+    scenes = models.ManyToManyField(MovieImage)
 
     created_at = models.DateTimeField(auto_now_add=True, null=True, blank=True)
     updated_at = models.DateTimeField(auto_now=True, null=True, blank=True)
