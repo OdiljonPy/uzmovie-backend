@@ -37,14 +37,13 @@ class ContactViewSet(ViewSet):
         if serializer.is_valid():
             obj = serializer.save()
             response = send_message_telegram(obj)
-            if response.status_code == 200:
+            if response.status_code != 200:
                 return Response(
-                    data=serializer.data,
-                    status=status.HTTP_201_CREATED
-                )
+                    data={"error": "Could not send message"},
+                    status=status.HTTP_400_BAD_REQUEST)
             return Response(
-                data=serializer.errors,
-                status=status.HTTP_400_BAD_REQUEST
+                data=serializer.data,
+                status=status.HTTP_201_CREATED
             )
 
 
@@ -54,16 +53,16 @@ class AboutViewSet(ViewSet):
         operation_summary="About us",
         manual_parameters=[
             openapi.Parameter('for_advertise', type=openapi.TYPE_INTEGER, description='for_advertise',
-                              in_=openapi.IN_QUERY),
+                              in_=openapi.IN_BODY),
             openapi.Parameter('watch_movie', type=openapi.TYPE_INTEGER, description='watch_movie',
-                              in_=openapi.IN_QUERY),
+                              in_=openapi.IN_BODY),
             openapi.Parameter('movie_number', type=openapi.TYPE_STRING, description='movie_number',
-                              in_=openapi.IN_QUERY),
-            openapi.Parameter('qr_image', type=openapi.TYPE_FILE, description='qr_image', in_=openapi.IN_QUERY),
+                              in_=openapi.IN_BODY),
+            openapi.Parameter('qr_image', type=openapi.TYPE_FILE, description='qr_image', in_=openapi.IN_BODY),
             openapi.Parameter('phone_number', type=openapi.TYPE_STRING, description='phone_number',
-                              in_=openapi.IN_QUERY),
-            openapi.Parameter('email', type=openapi.TYPE_STRING, description='email', in_=openapi.IN_QUERY),
-            openapi.Parameter('location', type=openapi.TYPE_STRING, description='location', in_=openapi.IN_QUERY)
+                              in_=openapi.IN_BODY),
+            openapi.Parameter('email', type=openapi.TYPE_STRING, description='email', in_=openapi.IN_BODY),
+            openapi.Parameter('location', type=openapi.TYPE_STRING, description='location', in_=openapi.IN_BODY)
         ],
         responses={200: AboutSerializer()},
         tags=['contact']

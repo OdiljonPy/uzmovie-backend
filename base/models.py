@@ -2,17 +2,16 @@ from django.db import models
 from .utils import phone_number_validation
 
 Status = (
-    (1, 'sent to check'),
-    (2, 'in progress'),
-    (3, 'checked')
+    (1, 'Sent_to_check'),
+    (2, 'In_progress'),
+    (3, 'Checked')
 
 )
 
 
 class About(models.Model):
     for_advertise = models.CharField(max_length=50)
-    watch_movie = models.PositiveIntegerField()
-    movie_number = models.PositiveIntegerField()
+    movie_number = models.PositiveIntegerField(default=0)
     qr_image = models.ImageField(upload_to='images/')
     location = models.CharField(max_length=150)
     phone_number = models.CharField(max_length=13, validators=[phone_number_validation])

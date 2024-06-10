@@ -1,6 +1,10 @@
 import requests
 from django.core.exceptions import ValidationError
-from config.settings import TELEGRAM_API_URL, BOT_ID, CHAT_ID
+from django.conf import settings
+
+BOT_ID = settings.BOT_ID
+CHAT_ID = settings.CHAT_ID
+TELEGRAM_API_URL = settings.TELEGRAM_API_URL
 
 
 def send_message_telegram(obj):
