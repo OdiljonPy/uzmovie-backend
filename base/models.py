@@ -2,9 +2,9 @@ from django.db import models
 from .utils import phone_number_validation
 
 Status = (
-    (1, 'sent to check'),
-    (2, 'in progress'),
-    (3, 'checked')
+    (1, 'Sent_to_check'),
+    (2, 'In_progress'),
+    (3, 'Checked')
 
 )
 

@@ -38,9 +38,8 @@ class ContactViewSet(ViewSet):
             obj = serializer.save()
             response = send_message_telegram(obj)
             if response.status_code != 200:
-                obj.delete()
                 return Response(
-                    data={"error": "Could not send otp to telegram"},
+                    data={"error": "Could not send message"},
                     status=status.HTTP_400_BAD_REQUEST)
             return Response(
                 data=serializer.data,

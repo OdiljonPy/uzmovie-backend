@@ -1,6 +1,6 @@
 import requests
 from django.core.exceptions import ValidationError
-from config import settings
+from django.conf import settings
 
 BOT_ID = settings.BOT_ID
 CHAT_ID = settings.CHAT_ID
