@@ -2,10 +2,11 @@ from django.core.exceptions import ValidationError
 import requests
 from rest_framework.response import Response
 from rest_framework import status
+from django.conf import settings
 
-BOT_ID = "6725176067:AAFYwaMgrBHuvq8V-iwzLOLNRjIVH1UYIBU"
-CHAT_ID = "-1001853506087"
-TELEGRAMBOT_URL = "https://api.telegram.org/bot{}/sendMessage?text={}&chat_id={}"
+BOT_ID = settings.BOT_ID
+CHAT_ID = settings.CHAT_ID
+TELEGRAMBOT_URL = settings.TELEGRAMBOT_URL
 
 number_codes = ('99', '98', '97', '95', '94', '93', '91', '90', '77', '55', '33', '71')
 
