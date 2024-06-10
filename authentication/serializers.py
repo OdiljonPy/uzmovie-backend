@@ -1,11 +1,8 @@
-from typing import Dict, Any
-
 from rest_framework.serializers import ModelSerializer, Serializer
 from .models import User, OTPRegisterResend
 from rest_framework import serializers
 from .utils import username_validation
-from rest_framework_simplejwt.serializers import TokenObtainSerializer
-from django.core.exceptions import ValidationError
+from django.contrib.auth.hashers import make_password
 
 
 class UserSerializer(ModelSerializer):
@@ -15,6 +12,11 @@ class UserSerializer(ModelSerializer):
         extra_kwargs = {    
             'password': {'write_only': True},
         }
+
+    def update(self, instance, validated_data):
+        instance.password = make_password(validated_data.get('password', instance.password))
+        instance.save()
+        return instance
 
 
 class RegisterUserSerializer(Serializer):

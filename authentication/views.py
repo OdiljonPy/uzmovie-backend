@@ -63,19 +63,11 @@ class LoginView(ViewSet):
         if not request.user.is_authenticated:
             return Response({"detail": "User is not authenticated"}, status.HTTP_401_UNAUTHORIZED)
         user = request.user
-        first_name = request.data.get('first_name')
-        last_name = request.data.get('last_name')
-        profile_picture = request.FILES.get('profile_picture')
-        password = request.data.get('password')
-        serializer = UserSerializer(user, data={"first_name": first_name,
-                                                "last_name": last_name,
-                                                "profile_picture": profile_picture,
-                                                "password": make_password(password)}, partial=True)
-
-        if not serializer.is_valid():
-            return Response(serializer.errors, status.HTTP_400_BAD_REQUEST)
-        serializer.save()
-        return Response(serializer.data, status.HTTP_201_CREATED)
+        serializer = UserSerializer(user, data=request.data, partial=True)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status.HTTP_200_OK)
+        return Response(serializer.errors, status.HTTP_400_BAD_REQUEST)
 
 
 class AuthenticateViewSet(ViewSet):
