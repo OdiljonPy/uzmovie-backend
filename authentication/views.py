@@ -7,7 +7,7 @@ from .serializers import (UserSerializer, RegisterUserSerializer, UpdateUserSeri
                           OTPRegisterVerifySerializer, ResetUserPasswordSerializer, SetNewPasswordSerializer)
 from drf_yasg.utils import swagger_auto_schema
 from .utils import (check_code_expire, checking_number_of_otp,
-                    send_otp_code_telegram, check_resend_otp_code)
+                    send_otp_code_telegram, check_resend_otp_code, check_token_expire)
 from django.contrib.auth.hashers import make_password
 from rest_framework_simplejwt.tokens import RefreshToken, AccessToken
 
@@ -215,6 +215,9 @@ class ResendAndResetViewSet(ViewSet):
         obj = OTPRegisterResend.objects.filter(otp_token=token).first()
         if not obj:
             return Response({"error": "Otp token is wrong"}, status.HTTP_400_BAD_REQUEST)
+
+        if not check_token_expire(obj.created_at):
+            return Response({"error": "Token is expired"}, status.HTTP_400_BAD_REQUEST)
 
         password = request.data.get('password')
         rep_password = request.data.get('rep_password')

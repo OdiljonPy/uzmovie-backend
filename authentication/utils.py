@@ -52,3 +52,13 @@ def check_resend_otp_code(created_at):
     if current_time - created_at < allowed_minut:
         return False
     return True
+
+
+def check_token_expire(created_at):
+    current_time = datetime.now()
+    allowed_minuts = timedelta(minutes=30)
+    if current_time - created_at < allowed_minuts:
+        return False
+    return True
+
+
