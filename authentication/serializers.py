@@ -9,7 +9,7 @@ class UserSerializer(ModelSerializer):
     class Meta:
         model = User
         fields = ('username', 'first_name', 'last_name', 'profile_picture', 'password')
-        extra_kwargs = {    
+        extra_kwargs = {
             'password': {'write_only': True},
         }
 
@@ -37,7 +37,7 @@ class UpdateUserSerializer(Serializer):
 class OTPRegisterResendSerializer(ModelSerializer):
     class Meta:
         model = OTPRegisterResend
-        fields = ('otp_key', )
+        fields = ('otp_key',)
 
 
 class OTPRegisterVerifySerializer(Serializer):
@@ -50,7 +50,7 @@ class OTPResendSerializer(Serializer):
 
 
 class ResetUserPasswordSerializer(Serializer):
-    username = serializers.CharField(max_length=12, validators=[username_validation,])
+    username = serializers.CharField(max_length=12, validators=[username_validation, ])
 
 
 class SetNewPasswordSerializer(Serializer):

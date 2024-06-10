@@ -60,5 +60,3 @@ def check_token_expire(created_at):
     if current_time - created_at < allowed_minuts:
         return False
     return True
-
-
