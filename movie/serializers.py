@@ -6,7 +6,7 @@ class SearchSerializer(serializers.ModelSerializer):
     class Meta:
         model = Movie
         fields = (
-            'id', 'title', 'subscription_type', 'movie_rating', 'countries', 'description',
+            'id', 'title', 'subscription_type', 'movie_rating', 'country', 'description',
             'release_date', 'language', 'genres', 'actors', 'directors'
         )
 

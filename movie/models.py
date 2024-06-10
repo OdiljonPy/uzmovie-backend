@@ -54,7 +54,7 @@ class Movie(models.Model):
     movie_rating = models.FloatField(default=0)
     country = models.ForeignKey(Country, on_delete=models.CASCADE)
     description = models.TextField()
-    release_date = models.DateField()
+    release_date = models.PositiveIntegerField(default=0)
     language = models.ForeignKey(Language, on_delete=models.CASCADE)
     genres = models.ManyToManyField(Genre)
     actors = models.ManyToManyField(Actor)
