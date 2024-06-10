@@ -4,7 +4,7 @@ from .views import MovieViewSet, CommentViewSet, SavedViewSet, SearchViewSet
 
 urlpatterns = [
     # SEARCH
-    path('search/', SearchViewSet.as_view({'get': 'search'})),
+    path('search/', SearchViewSet.as_view({'post': 'search'})),
 
     # MOVIE
     path('movies/', MovieViewSet.as_view({'get': 'filter'})),
@@ -15,9 +15,7 @@ urlpatterns = [
     path('save/list/', SavedViewSet.as_view({'get': 'list_movie'})),
 
     # COMMENT
-    path('comment/create/', CommentViewSet.as_view({'post': 'comment_create'})),
-    path('comment/delete/<int:pk>/', CommentViewSet.as_view({'delete': 'comment_destroy'})),
-    path('comment/review/<int:pk>/', CommentViewSet.as_view({'get': 'comment_review'})),
-    path('comment/list/', CommentViewSet.as_view({'get': 'comment_list'})),
-
+    path('comment/', CommentViewSet.as_view({'post': 'comment_create'})),
+    path('comment/<int:pk>/', CommentViewSet.as_view({'delete': 'comment_destroy'})),
+    path('comment/<int:pk>/', CommentViewSet.as_view({'get': 'get_by_id'})),
 ]
