@@ -3,12 +3,15 @@ from rest_framework.response import Response
 from rest_framework.viewsets import ViewSet
 from .models import User, OTPRegisterResend
 from .serializers import (UserSerializer, UserRequestSerializer, LoginSerializer,
-                          OTPRegisterResendSerializer, OTPRegisterResendRequestSerializer)
+                          OTPRegisterResendSerializer, OTPRegisterResendRequestSerializer, ResetUserPasswordSerializer,
+                          OTPRegisterVerifySerializer)
 from drf_yasg.utils import swagger_auto_schema
 from .utils import (check_code_expire, checking_number_of_otp,
                     send_otp_code_telegram, generate_otp_code, check_resend_otp_code)
 from django.contrib.auth.hashers import make_password
 from rest_framework_simplejwt.tokens import RefreshToken
+
+
 # serialzierni validate qismini yozish kerak
 
 
@@ -78,7 +81,8 @@ class AuthenticateViewSet(ViewSet):
     )
 
     def verify_register(self, request, *args, **kwargs):
-        otp_obj = OTPRegisterResend.objects.filter(otp_key=request.data.get('otp_key'), otp_code=request.data.get('otp_code')).first()
+        otp_obj = OTPRegisterResend.objects.filter(otp_key=request.data.get('otp_key'),
+                                                   otp_code=request.data.get('otp_code')).first()
         print(50 * '*', otp_obj, 50 * '*')
         if otp_obj is False:
             return Response(data={"error": "otp code is wrong"}, status=status.HTTP_404_NOT_FOUND)
@@ -96,24 +100,33 @@ class AuthenticateViewSet(ViewSet):
         return Response(data=UserSerializer(user).data, status=status.HTTP_200_OK)
 
 
+class UpdatePasswordViewSet(ViewSet):
+    def update_password(self, request, *args, **kwargs):
+        data = request.data
+        user = request.user
+        if user.is_authenticated:
+            userprofile = User.objects.filter(username=user).first()
+            userprofile.password = make_password(data.get('password'))
+            userprofile.save(update_fields=['password'])
+
+            return Response(data={'changed'}, status=status.HTTP_200_OK)
+        return Response(status=status.HTTP_403_FORBIDDEN)
+
+
 class ResendAndResetViewSet(ViewSet):
+
     def reset_password(self, request, *args, **kwargs):
         data = request.data
         user = User.objects.filter(username=data.get('username')).first()
-        if user.is_authenticated:
-            send_code = OTPRegisterResend.objects.create(otp_user=user, otp_type=2)
+        if user:
+            send_code = OTPRegisterResend.objects.create(otp_user=user, otp_type=3)
             send_code.save()
             send_otp_code_telegram(send_code)
             return Response({'code has been sent'})
         # if not user.is_authenticated:
         #     return Response({'/log in please'}, status=status.HTTP_403_FORBIDDEN)
 
-
-
-        return Response({'/log in please'}, status=status.HTTP_403_FORBIDDEN)
-
-
-
+        return Response({'/User not found'}, status=status.HTTP_403_FORBIDDEN)
 
 
 
@@ -123,52 +136,44 @@ class ResendAndResetViewSet(ViewSet):
         new_password = request.data.get('password')
         otp_key = request.data.get('key')
 
-        objects = OTPRegisterResend.objects.filter(otp_key=otp_key, otp_code=otp_code).first()
-        #print(objects.otp_code, 50*'*')
-        if checking_number_of_otp(objects):
-            if objects:
-                changed_password = User.objects.filter(id=objects.otp_user_id)
-                changed_password.password = make_password(new_password)
-                #changed_password.save()
-                return Response(data={'changed'}, status=status.HTTP_200_OK)
-            return Response(data={"log in please"}, status=status.HTTP_200_OK)
+        objects = OTPRegisterResend.objects.filter(otp_key=otp_key, otp_code=otp_code, otp_type=3).first()
+
+        if objects and check_code_expire(objects.created_at):
+            changepassword = User.objects.filter(id=objects.otp_user_id).first()
+            changepassword.password = make_password(new_password)
+            changepassword.save(update_fields=['password'])
+
+            delete_otp_code = OTPRegisterResend.objects.filter(otp_key=otp_key).first()
+            delete_otp_code.delete()
+
+            return Response(data={'changed'}, status=status.HTTP_200_OK)
+        return Response(status=status.HTTP_403_FORBIDDEN, data={"Invalid data or code expired"})
 
 
 
 
+def resend_otp_code(self, request, *args, **kwargs):
+    otp_key = request.GET.get('otp_key')
+    otp_obj = OTPRegisterResend.objects.filter(otp_key=otp_key).first()
+    # bu yerda otp codni qayta tekshirish uchun otp key soralyapti
+    if not otp_obj:
+        return Response(data={"error": "Otp key is wrong"}, status=status.HTTP_404_NOT_FOUND)
 
+    objs = OTPRegisterResend.objects.filter(otp_user=otp_obj.otp_user, otp_type=2).order_by('-created_at')
+    if not checking_number_of_otp(objs):
+        return Response(data={"error": "Try again 12 hours later"}, status=status.HTTP_403_FORBIDDEN)
 
-    swagger_auto_schema(
-        operation_description="Verifying registration",
-        operation_summary="Verify registered user",
-        responses={200: OTPRegisterResendSerializer()},
-        tags=['auth']
+    if checking_number_of_otp(objs) == 'delete':
+        OTPRegisterResend.objects.filter(otp_user=otp_obj.otp_user, otp_type=2).delete()
 
-    )
+    if not check_resend_otp_code(otp_obj.created_at):
+        return Response(data={"error": "Try again a minute later"}, status=status.HTTP_403_FORBIDDEN)
 
-    def resend_otp_code(self, request, *args, **kwargs):
-        otp_key = request.GET.get('otp_key')
-        otp_obj = OTPRegisterResend.objects.filter(otp_key=otp_key).first()
-        # bu yerda otp codni qayta tekshirish uchun otp key soralyapti
-        if not otp_obj:
-            return Response(data={"error": "Otp key is wrong"}, status=status.HTTP_404_NOT_FOUND)
-
-        objs = OTPRegisterResend.objects.filter(otp_user=otp_obj.otp_user, otp_type=2).order_by('-created_at')
-        if not checking_number_of_otp(objs):
-            return Response(data={"error": "Try again 12 hours later"}, status=status.HTTP_403_FORBIDDEN)
-
-        if checking_number_of_otp(objs) == 'delete':
-            OTPRegisterResend.objects.filter(otp_user=otp_obj.otp_user, otp_type=2).delete()
-
-        if not check_resend_otp_code(otp_obj.created_at):
-            return Response(data={"error": "Try again a minute later"}, status=status.HTTP_403_FORBIDDEN)
-
-        new_otp = OTPRegisterResend.objects.create(otp_user=otp_obj.otp_user)
-        new_otp.save()
-        response = send_otp_code_telegram(new_otp)
-        if response.status_code != 200:
-            new_otp.delete()
-            return Response({"error": "Could not send otp to telegram"}, status.HTTP_400_BAD_REQUEST)
-        otp_obj.delete()
-        return Response(data={"otp_key": new_otp.otp_key}, status=status.HTTP_200_OK)
-
+    new_otp = OTPRegisterResend.objects.create(otp_user=otp_obj.otp_user)
+    new_otp.save()
+    response = send_otp_code_telegram(new_otp)
+    if response.status_code != 200:
+        new_otp.delete()
+        return Response({"error": "Could not send otp to telegram"}, status.HTTP_400_BAD_REQUEST)
+    otp_obj.delete()
+    return Response(data={"otp_key": new_otp.otp_key}, status=status.HTTP_200_OK)
