@@ -24,8 +24,7 @@ def generate_otp_code():
 
 def check_code_expire(created_at):
     current_time = datetime.now()
-    allowed_minut = timedelta(minutes=3)
-    if current_time - created_at > allowed_minut:
+    if current_time - created_at > timedelta(minutes=3):
         return False
     return True
 
@@ -48,15 +47,13 @@ def checking_number_of_otp(checking):
 
 def check_resend_otp_code(created_at):
     current_time = datetime.now()
-    allowed_minut = timedelta(minutes=1)
-    if current_time - created_at < allowed_minut:
+    if current_time - created_at < timedelta(minutes=1):
         return False
     return True
 
 
 def check_token_expire(created_at):
     current_time = datetime.now()
-    allowed_minuts = timedelta(minutes=30)
-    if current_time - created_at < allowed_minuts:
+    if current_time - created_at < timedelta(minutes=30):
         return False
     return True
