@@ -18,12 +18,12 @@ def check_status(user, movie):
     subscription = Subscription.objects.filter(user=user).first()
 
     if subscription.expired_at < datetime.now():
-        subscription.status = "2"
+        subscription.status = 2
         subscription.save(update_fields=['status'])
 
     if movie.subscription_type == 1:
         return Response(data={"ok": True}, status=status.HTTP_200_OK)
-    if subscription.status == "1":
+    if subscription.status == 1:
             return Response(data={"ok": True}, status=status.HTTP_200_OK)
     return Response(data={"ok": False}, status=status.HTTP_400_BAD_REQUEST)
 
