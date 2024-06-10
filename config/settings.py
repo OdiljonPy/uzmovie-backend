@@ -154,5 +154,5 @@ SIMPLE_JWT = {
 }
 
 BOT_ID = "6725176067:AAFYwaMgrBHuvq8V-iwzLOLNRjIVH1UYIBU"
-CHAT_ID = "-1001853506086"
+CHAT_ID = "-1001853506087"
 TELEGRAM_API_URL = "https://api.telegram.org/bot{}/sendMessage?text={}&chat_id={}"
