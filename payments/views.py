@@ -28,7 +28,7 @@ class GetChoicesViewSet(ViewSet):
 
 
 class BuySubscriptionViewSet(ViewSet):
-    permission_classes = [IsAuthenticated, AllowAny]
+    permission_classes = [IsAuthenticated]
     authentication_classes = [JWTAuthentication]
 
     throttle_scope = 'send_otp'
@@ -74,7 +74,7 @@ class BuySubscriptionViewSet(ViewSet):
         return Response(status=status.HTTP_401_UNAUTHORIZED)
 
 class VerifyOTPViewSet(ViewSet):
-    permission_classes = [IsAuthenticated, AllowAny]
+    permission_classes = [IsAuthenticated]
     authentication_classes = [JWTAuthentication]
 
     throttle_scope = 'verify_otp'
@@ -96,7 +96,7 @@ class VerifyOTPViewSet(ViewSet):
         otp = ChoiceOTP.objects.filter(otp_key=otp_key, otp_code=otp_code).first()
 
         if otp is None:
-            return Response(data="otp code is wrong", status=status.HTTP_400_BAD_REQUEST)
+            return Response(data="otp key is wrong or not found", status=status.HTTP_400_BAD_REQUEST)
 
         choice = Choice.objects.filter(name=otp.choice.name).first()
         user_obj = User.objects.filter(username=otp.user).first()

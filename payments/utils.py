@@ -22,8 +22,7 @@ def check_status(user, movie):
 
     if movie.subscription_type == 1:
         return Response(data={"ok": True}, status=status.HTTP_200_OK)
-    elif movie.subscription_type == 2:
-        if subscription.status == "1":
+    if subscription.status == "1":
             return Response(data={"ok": True}, status=status.HTTP_200_OK)
     return Response(data={"ok": False}, status=status.HTTP_400_BAD_REQUEST)
 
