@@ -88,7 +88,7 @@ class MovieViewSet(ViewSet):
         country = request.data.get('country')
         release_date = request.data.get('release_date')
         movie_rating = request.data.get('movie_rating')
-        movies = Movie.objects.all()
+        movies = Movie.objects.all().order_by('-release_date')
 
         if actor:
             movies = movies.filter(actors__name__icontains=actor)
@@ -255,7 +255,7 @@ class CommentViewSet(ViewSet):
     )
     def comment_destroy(self, request, *args, **kwargs):
         if not request.user.is_authenticated:
-            return Response(data={'error': 'Not authenticated'}, status=status.HTTP_404_NOT_FOUND)
+            return Response(data={'error': 'Not authenticated'}, status=status.HTTP_401_UNAUTHORIZED)
 
         comment = Comment.objects.filter(id=kwargs['pk']).first()
 
