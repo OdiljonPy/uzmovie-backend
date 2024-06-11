@@ -1,7 +1,7 @@
-from datetime import timedelta, date, datetime
+from datetime import timedelta, datetime
 from rest_framework.response import Response
 from rest_framework.viewsets import ViewSet
-from rest_framework.permissions import IsAuthenticated, AllowAny
+from rest_framework.permissions import IsAuthenticated
 from rest_framework_simplejwt.authentication import JWTAuthentication
 from django.utils import timezone
 from authentication.models import User
@@ -10,7 +10,7 @@ from drf_yasg.utils import swagger_auto_schema
 from .models import Card, ChoiceOTP, Subscription, Choice
 from .utils import send_otp_telegram
 from .serializers import SubscriptionSerializer, ChoiceOTPSerializer, CardPanSerializer, OTPCodeSerializer, \
-    ChoiceSerializer
+    ChoiceSerializer, DeleteChoiceOTPSerializer
 from authentication.utils import checking_number_of_otp
 
 
@@ -31,6 +31,8 @@ class GetChoicesViewSet(ViewSet):
 class BuySubscriptionViewSet(ViewSet):
     permission_classes = [IsAuthenticated]
     authentication_classes = [JWTAuthentication]
+
+    throttle_scope = 'send_otp'
 
     @swagger_auto_schema(
         operation_description="info",
@@ -61,7 +63,8 @@ class BuySubscriptionViewSet(ViewSet):
             if not checking_number_of_otp(del_otp):
                 return Response(data="Try again 12 hours later", status=status.HTTP_400_BAD_REQUEST)
             if checking_number_of_otp(del_otp) == 'delete':
-                ChoiceOTP.objects.filter(phone_number=card.phone_number).delete()
+                serializer = DeleteChoiceOTPSerializer(del_otp, data={"deleted_at": datetime.now()}, many=True)
+                serializer.save()
 
             otp = ChoiceOTP.objects.create(user=user, phone_number=card.phone_number, choice=choice)
             otp.save()
@@ -100,7 +103,9 @@ class VerifyOTPViewSet(ViewSet):
         user_obj = User.objects.filter(username=otp.user).first()
 
         if (timezone.now() - otp.created_at) > timedelta(minutes=3):
-            otp.delete()
+            otp.deleted_at = timezone.now()
+            otp.save(update_fields=['deleted_at'])
+
             return Response(data="otp code is expired", status=status.HTTP_400_BAD_REQUEST)
 
         if otp.otp_code != otp_code:
@@ -119,9 +124,9 @@ class VerifyOTPViewSet(ViewSet):
             card.balance -= choice.price
             card.save(update_fields=['balance'])
 
-            otp.delete()
+            otp.deleted_at = timezone.now()
+            otp.save(update_fields=['deleted_at'])
             return Response(data={"successfully subscribed"}, status=status.HTTP_200_OK)
-
 
         subscription.choice = choice
         subscription.status = 1
@@ -131,6 +136,8 @@ class VerifyOTPViewSet(ViewSet):
         card.balance -= choice.price
         card.save(update_fields=['balance'])
 
-        otp.delete()
+        otp.deleted_at = timezone.now()
+        otp.save(update_fields=['deleted_at'])
 
         return Response(data={"successfully updated subscription"}, status=status.HTTP_200_OK)
+

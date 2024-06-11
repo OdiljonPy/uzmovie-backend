@@ -30,3 +30,11 @@ class ChoiceOTPSerializer(ModelSerializer):
         model = ChoiceOTP
         fields = ("otp_key",)
 
+
+class DeleteChoiceOTPSerializer(ModelSerializer):
+    class Meta:
+        model = ChoiceOTP
+        fields = ("id", "otp_key", "otp_code", "choice", "user", "phone_number", "created_at")
+
+
+

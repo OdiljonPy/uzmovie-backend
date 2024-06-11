@@ -28,6 +28,8 @@ class Subscription(models.Model):
     start_date = models.DateField(default=timezone.now, null=True)
     expired_at = models.DateField(null=True)
 
+    deleted_at = models.DateTimeField(null=True)
+
     def __str__(self):
         return self.user.username
 
@@ -40,6 +42,8 @@ class ChoiceOTP(models.Model):
     phone_number = models.IntegerField(validators=[username_validation])
 
     created_at = models.DateTimeField(auto_now_add=True)
+
+    deleted_at = models.DateTimeField(null=True)
 
     def __str__(self):
         return self.user.username
@@ -61,4 +65,3 @@ class Card(models.Model):
 
     def __str__(self):
         return self.holder_full_name
-
