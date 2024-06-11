@@ -7,10 +7,11 @@ from django.utils import timezone
 from authentication.models import User
 from rest_framework import status
 from drf_yasg.utils import swagger_auto_schema
-
 from .models import Card, ChoiceOTP, Subscription, Choice
 from .utils import send_otp_telegram
-from .serializers import SubscriptionSerializer, ChoiceOTPSerializer, CardPanSerializer, OTPCodeSerializer, ChoiceSerializer
+from .serializers import SubscriptionSerializer, ChoiceOTPSerializer, CardPanSerializer, OTPCodeSerializer, \
+    ChoiceSerializer
+from authentication.utils import checking_number_of_otp
 
 
 class GetChoicesViewSet(ViewSet):
@@ -31,8 +32,6 @@ class BuySubscriptionViewSet(ViewSet):
     permission_classes = [IsAuthenticated]
     authentication_classes = [JWTAuthentication]
 
-    throttle_scope = 'send_otp'
-
     @swagger_auto_schema(
         operation_description="info",
         operation_summary="get card number",
@@ -48,7 +47,7 @@ class BuySubscriptionViewSet(ViewSet):
             pan = request.data.get('pan')
             choice_status = request.data.get('choice')
 
-            choice = Choice.objects.filter(name__icontains=choice_status).first()
+            choice = Choice.objects.filter(id=choice_status).first()
             card = Card.objects.filter(pan=pan).first()
 
             if card is None:
@@ -59,10 +58,10 @@ class BuySubscriptionViewSet(ViewSet):
                 return Response(data="not enough money", status=status.HTTP_400_BAD_REQUEST)
 
             del_otp = ChoiceOTP.objects.filter(phone_number=card.phone_number)
-            for i in del_otp:
-                if i.created_at < timezone.now():
-                    del_otp = ChoiceOTP.objects.filter(id=i.id).first()
-                    del_otp.delete()
+            if not checking_number_of_otp(del_otp):
+                return Response(data="Try again 12 hours later", status=status.HTTP_400_BAD_REQUEST)
+            if checking_number_of_otp(del_otp) == 'delete':
+                ChoiceOTP.objects.filter(phone_number=card.phone_number).delete()
 
             otp = ChoiceOTP.objects.create(user=user, phone_number=card.phone_number, choice=choice)
             otp.save()
@@ -73,11 +72,10 @@ class BuySubscriptionViewSet(ViewSet):
 
         return Response(status=status.HTTP_401_UNAUTHORIZED)
 
+
 class VerifyOTPViewSet(ViewSet):
     permission_classes = [IsAuthenticated]
     authentication_classes = [JWTAuthentication]
-
-    throttle_scope = 'verify_otp'
 
     @swagger_auto_schema(
         operation_description="verify",
@@ -112,12 +110,10 @@ class VerifyOTPViewSet(ViewSet):
         card = Card.objects.filter(phone_number=otp.phone_number).first()
 
         if subscription is None:
-            year = date.today().year
-            month = date.today().month + 1
-            day = date.today().day
 
-            expired_at = date(year, month, day)
-            subscription_create = Subscription.objects.create(user=user_obj, choice=choice, status="1", expired_at=expired_at)
+            expired_at = datetime.now() + timedelta(days=30)
+            subscription_create = Subscription.objects.create(user=user_obj, choice=choice, status="1",
+                                                              expired_at=expired_at)
             subscription_create.save()
 
             card.balance -= choice.price
@@ -126,16 +122,10 @@ class VerifyOTPViewSet(ViewSet):
             otp.delete()
             return Response(data={"successfully subscribed"}, status=status.HTTP_200_OK)
 
-        sub_expired_at = subscription.expired_at
-        year = sub_expired_at.year
-        month = sub_expired_at.month
-        day = sub_expired_at.day
-
-        subs_expired_at = date(year, month, day)
 
         subscription.choice = choice
         subscription.status = 1
-        subscription.expired_at = subs_expired_at
+        subscription.expired_at = subscription.expired_at + timedelta(days=30)
         subscription.save(update_fields=['choice', 'status', 'expired_at'])
 
         card.balance -= choice.price
@@ -144,4 +134,3 @@ class VerifyOTPViewSet(ViewSet):
         otp.delete()
 
         return Response(data={"successfully updated subscription"}, status=status.HTTP_200_OK)
-
