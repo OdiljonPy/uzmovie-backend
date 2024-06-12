@@ -59,7 +59,7 @@ class BuySubscriptionViewSet(ViewSet):
             if card.balance < choice.price:
                 return Response(data="not enough money", status=status.HTTP_400_BAD_REQUEST)
 
-            del_otp = ChoiceOTP.objects.filter(phone_number=card.phone_number)
+            del_otp = ChoiceOTP.objects.filter(phone_number=card.phone_number, deleted_at__isnull=True)
             if not checking_number_of_otp(del_otp):
                 return Response(data="Try again 12 hours later", status=status.HTTP_400_BAD_REQUEST)
             if checking_number_of_otp(del_otp) == 'delete':
@@ -94,7 +94,7 @@ class VerifyOTPViewSet(ViewSet):
         if type(otp_code) is not int:
             return Response(data={"please write number"}, status=status.HTTP_400_BAD_REQUEST)
 
-        otp = ChoiceOTP.objects.filter(otp_key=otp_key, otp_code=otp_code).first()
+        otp = ChoiceOTP.objects.filter(otp_key=otp_key, otp_code=otp_code, deleted_at__isnull=True).first()
 
         if otp is None:
             return Response(data="otp key is wrong or not found", status=status.HTTP_400_BAD_REQUEST)
