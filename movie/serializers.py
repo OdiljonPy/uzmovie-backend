@@ -1,76 +1,84 @@
 from rest_framework import serializers
-from .models import Movie, Director, Comment, Saved, Genre, Country
+from .models import Movie, Director, Comment, Saved, Genre, Country, Language
 
 
 class SearchSerializer(serializers.ModelSerializer):
     class Meta:
         model = Movie
-        fields = '__all__'
+        fields = (
+            'id', 'title', 'subscription_type', 'movie_rating', 'countries', 'description',
+            'release_date', 'language', 'genres', 'actors', 'directors'
+        )
 
 
 class CommentSerializer(serializers.ModelSerializer):
     class Meta:
         model = Comment
         fields = (
-            'id', 'user', 'movie', 'content', 'rating', 'rated', 'created_at', 'updated_at'
+            'id', 'user', 'movie', 'content', 'rating',  # is active
         )
+
+
+class LanguageSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Language
+        fields = ('id', 'name')
 
 
 class DirectorSerializer(serializers.ModelSerializer):
     class Meta:
         model = Director
-        fields = '__all__'
+        fields = ('id', 'name')
 
 
 class SavedSerializer(serializers.ModelSerializer):
     class Meta:
         model = Saved
-        fields = '__all__'
+        fields = ('user', 'movie')
 
 
 class GenreSerializer(serializers.ModelSerializer):
     class Meta:
         model = Genre
-        fields = '__all__'
+        fields = ('id', 'name')
 
 
 class CountrySerializer(serializers.ModelSerializer):
     class Meta:
         model = Country
-        fields = '__all__'
+        fields = ('id', 'name')
 
 
 class MovieSerializer(serializers.ModelSerializer):
-    directors = serializers.SerializerMethodField()
-    genres = serializers.SerializerMethodField()
-    actors = serializers.SerializerMethodField()
-    countries = serializers.SerializerMethodField()
-
     class Meta:
         model = Movie
-        fields = [
-            'id', 'title', 'subscription_type', 'imdb_rating', 'p_rating', 'description',
-            'release_date', 'directors', 'genres', 'actors', 'countries'
-        ]
-
-    def get_directors(self, obj):
-        director = obj.directors
-        return {"id": director.id, "name": director.name}
-
-    def get_countries(self, obj):
-        country = obj.countries
-        return {"id": country.id, "name": country.name}
-
-    def get_genres(self, obj):
-        genres = obj.genres.all()
-        return [{"id": genre.id, "name": genre.name} for genre in genres]
-
-    def get_actors(self, obj):
-        actors = obj.actors.all()
-        return [{"id": actor.id, "name": actor.name} for actor in actors]
+        fields = (
+            'id', 'title', 'p_rating', 'description',
+            'release_date', 'subscription_type', 'directors', 'genres', 'actors', 'countries', 'language'
+        )
 
     def to_representation(self, instance):
-        representation = super().to_representation(instance)
-        representation['genres'] = self.get_genres(instance)
-        representation['actors'] = self.get_actors(instance)
-        return representation
+        data = super().to_representation(instance)
+        data['directors'] = {
+            "id": instance.directors.id,
+            "name": instance.directors.name
+        }
+        data['countries'] = {
+            "id": instance.countries.id,
+            "name": instance.countries.name
+        }
+        data['language'] = {
+            "id": instance.language.id,
+            "name": instance.language.name
+        }
+        data['genres'] = [
+            {"id": genre.id, "name": genre.name} for genre in instance.genres.all()
+        ]
+        data['actors'] = [
+            {"id": actor.id, "name": actor.name} for actor in instance.actors.all()
+        ]
+        data['subscription_type'] = {
+            "id": instance.subscription_type,
+            "name": instance.get_subscription_type_display()
+        }
+        return data

@@ -1,20 +1,26 @@
-from typing import Dict, Any
-
 from rest_framework.serializers import ModelSerializer, Serializer
 from .models import User, OTPRegisterResend
 from rest_framework import serializers
 from .utils import username_validation
-from rest_framework_simplejwt.serializers import TokenObtainSerializer
-from django.core.exceptions import ValidationError
+from django.contrib.auth.hashers import make_password
 
 
 class UserSerializer(ModelSerializer):
     class Meta:
         model = User
         fields = ('username', 'first_name', 'last_name', 'profile_picture', 'password')
-        extra_kwargs = {    
+        extra_kwargs = {
             'password': {'write_only': True},
         }
+
+    def update(self, instance, validated_data):
+        instance.password = make_password(validated_data.get('password', instance.password))
+        instance.first_name = validated_data.get('first_name', instance.first_name)
+        instance.last_name = validated_data.get('last_name', instance.last_name)
+        instance.profile_picture = validated_data.get('profile_picture', instance.profile_picture)
+        instance.username = validated_data.get('username', instance.username)
+        instance.save()
+        return instance
 
 
 class RegisterUserSerializer(Serializer):
@@ -31,7 +37,7 @@ class UpdateUserSerializer(Serializer):
 class OTPRegisterResendSerializer(ModelSerializer):
     class Meta:
         model = OTPRegisterResend
-        fields = ('otp_key', )
+        fields = ('otp_key',)
 
 
 class OTPRegisterVerifySerializer(Serializer):
@@ -44,7 +50,7 @@ class OTPResendSerializer(Serializer):
 
 
 class ResetUserPasswordSerializer(Serializer):
-    username = serializers.CharField(max_length=12, validators=[username_validation,])
+    username = serializers.CharField(max_length=12, validators=[username_validation, ])
 
 
 class SetNewPasswordSerializer(Serializer):
