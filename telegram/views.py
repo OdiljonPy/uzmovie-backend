@@ -8,7 +8,7 @@ from movie.models import Movie
 from movie.serializers import MovieSerializer
 from .core import Paginator
 from .models import TelegramUser, Saved
-from .serializers import SavedSerializer
+from .serializers import SavedSerializer, MoviePaginationSerializer
 
 
 class MovieViewSet(ViewSet):
@@ -29,8 +29,7 @@ class MovieViewSet(ViewSet):
     def filter(self, request, *args, **kwargs):
         data = request.GET
         page = data.get('page', 1)
-        size = data.get('size', 2)
-
+        size = data.get('size', 10)
         if not str(page).isdigit() or int(page) < 1:
             return Response(data={'error': 'page must be greater than 0'}, status=status.HTTP_400_BAD_REQUEST)
         if not str(size).isdigit() or int(size) < 1:
@@ -54,7 +53,15 @@ class MovieViewSet(ViewSet):
         if condition.find('and') != -1:
             paginator = Paginator(Movie, size, page, query + condition[:len(condition) - 4])
         movies = paginator.page()
-        serializer = MovieSerializer(movies, many=True)
+        d = {
+            'total': paginator.count,
+            'limit': paginator.limit,
+            'current_page': paginator.number(),
+            'has_next': paginator.has_next(),
+            'has_previous': paginator.has_previous(),
+            'data': movies
+        }
+        serializer = MoviePaginationSerializer(d)
         return Response(data=serializer.data, status=status.HTTP_200_OK)
 
     @swagger_auto_schema(
@@ -85,6 +92,8 @@ class SavedViewSet(ViewSet):
         operation_description="Get Movies From Saved",
         operation_summary="Get Movies From Saved",
         manual_parameters=[
+            openapi.Parameter('page', type=openapi.TYPE_INTEGER, description='page', in_=openapi.IN_QUERY),
+            openapi.Parameter('size', type=openapi.TYPE_INTEGER, description='size', in_=openapi.IN_QUERY),
             openapi.Parameter('user_id', type=openapi.TYPE_INTEGER, description='telegram user id',
                               in_=openapi.IN_QUERY,
                               required=True),
@@ -93,11 +102,30 @@ class SavedViewSet(ViewSet):
         tags=['Telegram']
     )
     def get(self, request, *args, **kwargs):
-        user = TelegramUser.objects.filter(user_id=request.GET.get('user_id')).first()
+        data = request.GET
+        page = data.get('page', 1)
+        size = data.get('size', 10)
+        if not str(page).isdigit() or int(page) < 1:
+            return Response(data={'error': 'page must be greater than 0'}, status=status.HTTP_400_BAD_REQUEST)
+        if not str(size).isdigit() or int(size) < 1:
+            return Response(data={'error': 'size must be greater than 0'}, status=status.HTTP_400_BAD_REQUEST)
+
+        user = TelegramUser.objects.filter(user_id=data.get('user_id')).first()
         if not user:
-            return Response(data={'error': 'User not found'}, status=status.HTTP_404_NOT_FOUND)
-        movies = Saved.objects.filter(user__user_id=user.user_id)
-        serializer = SavedSerializer(movies, many=True)
+            return Response(data={'error': 'User not found'}, status=status.HTTP_400_BAD_REQUEST)
+        a = Movie.objects.all()
+        query = f"SELECT m.id, m.title, m.subscription_type, m.movie_rating, m.countries_id, m.description, m.release_date, m.language_id, m.directors_id, m.video, m.image FROM telegram_saved s JOIN telegram_telegramuser u ON s.user_id = u.id JOIN movie_movie m ON m.id = s.movie_id WHERE u.user_id = {user.user_id}"
+        paginator = Paginator(Movie, size, page, query)
+        movies = paginator.page()
+        d = {
+            'total': paginator.count,
+            'limit': paginator.limit,
+            'current_page': paginator.number(),
+            'has_next': paginator.has_next(),
+            'has_previous': paginator.has_previous(),
+            'data': movies
+        }
+        serializer = MoviePaginationSerializer(d)
         return Response(data=serializer.data, status=status.HTTP_200_OK)
 
     @swagger_auto_schema(

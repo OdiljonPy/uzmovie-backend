@@ -27,6 +27,3 @@ class Paginator:
 
     def previous_page_number(self):
         return str(self.p - 1)
-
-    def page_range(self):
-        return range(1, ceil(self.count / self.limit) + 1)
