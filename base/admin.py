@@ -1,6 +1,7 @@
 from django.contrib import admin
 from django.utils.html import format_html
 from .models import Contact, About
+from datetime import datetime
 
 
 class ContactAdmin(admin.ModelAdmin):
@@ -26,6 +27,12 @@ class ContactAdmin(admin.ModelAdmin):
         self.message_user(request, "{} contact has been published.".format(count))
 
     contact_status_published.short_description = 'Mark selected as published'
+
+    def delete_queryset(self, request, queryset):
+        for obj in queryset:
+            obj.delete_at = datetime.now()
+            obj.save()
+        self.message_user(request, "{} contact has been deleted.".format(queryset.count()))
 
 
 class AboutUsAdmin(admin.ModelAdmin):
