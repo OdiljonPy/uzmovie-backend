@@ -24,6 +24,7 @@ class User(AbstractUser):
 
     is_verified = models.BooleanField(default=False)
     profile_picture = models.ImageField(upload_to='profile_pictures', blank=True, null=True)
+    deleted_at = models.DateTimeField(blank=True, null=True)
 
     def __str__(self):
         return self.username
@@ -32,11 +33,26 @@ class User(AbstractUser):
 class OTPRegisterResend(models.Model):
     otp_key = models.UUIDField(unique=True, default=uuid.uuid4, editable=False)
     otp_code = models.PositiveIntegerField(default=generate_otp_code)
-    otp_token = models.UUIDField(default=uuid.uuid4)
     otp_user = models.ForeignKey(User, models.SET_NULL, null=True)
     otp_type = models.IntegerField(choices=OtpTypes, default=1)
     attempts = models.IntegerField(default=0)
 
+    deleted_at = models.DateTimeField(blank=True, null=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return str(self.created_at)
+
+
+class OTPSetPassword(models.Model):
+    otp_key = models.UUIDField(unique=True, default=uuid.uuid4, editable=False)
+    otp_code = models.PositiveIntegerField(default=generate_otp_code)
+    otp_token = models.UUIDField(default=uuid.uuid4)
+    otp_user = models.ForeignKey(User, models.SET_NULL, null=True)
+    attempts = models.IntegerField(default=0)
+
+    deleted_at = models.DateTimeField(blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
