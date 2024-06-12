@@ -6,13 +6,13 @@ from .models import ChoiceOTP, Subscription, Choice
 class SubscriptionSerializer(ModelSerializer):
     class Meta:
         model = Subscription
-        fields = '__all__'
+        fields = ("id", "user", "choice", "status", "start_date", "expired_at")
 
 
 class ChoiceSerializer(ModelSerializer):
     class Meta:
         model = Choice
-        fields = '__all__'
+        fields = ("id", "name", "price", "description")
 
 
 class OTPCodeSerializer(Serializer):
@@ -22,11 +22,19 @@ class OTPCodeSerializer(Serializer):
 
 class CardPanSerializer(Serializer):
     pan = serializers.IntegerField()
-    choice = serializers.CharField()
+    choice = serializers.IntegerField()
 
 
 class ChoiceOTPSerializer(ModelSerializer):
     class Meta:
         model = ChoiceOTP
         fields = ("otp_key",)
+
+
+class DeleteChoiceOTPSerializer(ModelSerializer):
+    class Meta:
+        model = ChoiceOTP
+        fields = ("id", "otp_key", "otp_code", "choice", "user", "phone_number", "created_at")
+
+
 
