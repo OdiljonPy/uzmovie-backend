@@ -16,6 +16,7 @@ class Choice(models.Model):
     name = models.CharField(max_length=100)
     price = models.PositiveIntegerField(default=0)
     description = models.TextField(max_length=260, blank=True, null=True)
+
     deleted_at = models.DateField(null=True)
 
     def __str__(self):
@@ -63,6 +64,7 @@ class Card(models.Model):
 
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+
     deleted_at = models.DateField(null=True)
 
     def __str__(self):
