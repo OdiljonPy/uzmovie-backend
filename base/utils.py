@@ -8,7 +8,7 @@ TELEGRAM_API_URL = settings.TELEGRAM_API_URL
 
 
 def send_message_telegram(obj):
-    message = (f"Project:Uzmovi\n"
+    message = (f"Project: Uzmovie\n"
                f"phone_number:{obj.phone_number}\n"
                f"first_name:{obj.first_name}\n"
                f"last_name:{obj.last_name}\n"
