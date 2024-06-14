@@ -1,4 +1,6 @@
 from django.contrib import admin
+from django.utils.html import format_html
+
 from .models import (
     Genre,
     Actor,
@@ -7,8 +9,16 @@ from .models import (
     Comment,
     Movie,
     Country,
-    Language
+    Language,
+    MovieImage
 )
+
+
+class MovieImageAdmin(admin.ModelAdmin):
+    list_display = ('images', 'preview')
+
+    def preview(self, obj):
+        return format_html(f"<img width=50 height=50 src='{obj.image.url}'")
 
 
 class LanguageAdmin(admin.ModelAdmin):
@@ -59,3 +69,4 @@ admin.site.register(Director, DirectorAdmin)
 admin.site.register(Saved, SavedAdmin)
 admin.site.register(Comment, CommentAdmin)
 admin.site.register(Country, CountryAdmin)
+admin.site.register(MovieImage, MovieImageAdmin)
