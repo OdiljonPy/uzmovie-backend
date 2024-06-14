@@ -1,4 +1,3 @@
-from django.core.paginator import Paginator
 from django.db.models import Q, Avg
 from drf_yasg import openapi
 from drf_yasg.utils import swagger_auto_schema
@@ -8,8 +7,9 @@ from .models import Movie, Saved, Comment
 from rest_framework import status
 from .serializers import MovieSerializer, CommentSerializer, SavedSerializer
 from authentication.models import User
-from payments.utils import check_status
+from .utils import check_premium
 import math
+from difflib import SequenceMatcher
 
 
 class SearchViewSet(ViewSet):
@@ -90,20 +90,28 @@ class MovieViewSet(ViewSet):
         movie_rating = request.data.get('movie_rating')
         movies = Movie.objects.all().order_by('-release_date')
 
-        if actor:
-            movies = movies.filter(actors__name__icontains=actor)
-        if director:
-            movies = movies.filter(directors__name__icontains=director)
-        if genre:
-            movies = movies.filter(genres__name__icontains=genre)
-        if country:
-            movies = movies.filter(country__name__icontains=country)
-        if release_date:
-            movies = movies.filter(release_date=release_date)
-        if movie_rating:
-            movies = movies.filter(movie_rating__icontains=movie_rating)
+        similarity_threshold = 0.6
 
-        total = movies.count()
+        def is_similar(value, query):
+            return SequenceMatcher(None, value, query).ratio() >= similarity_threshold
+
+        if actor:
+            movies = [movie for movie in movies if
+                      any(is_similar(actor, actor_name) for actor_name in movie.actors.values_list('name', flat=True))]
+        if director:
+            movies = [movie for movie in movies if any(is_similar(director, director_name) for director_name in
+                                                       movie.directors.values_list('name', flat=True))]
+        if genre:
+            movies = [movie for movie in movies if
+                      any(is_similar(genre, genre_name) for genre_name in movie.genres.values_list('name', flat=True))]
+        if country:
+            movies = [movie for movie in movies if is_similar(country, movie.country.name)]
+        if release_date:
+            movies = [movie for movie in movies if movie.release_date == release_date]
+        if movie_rating:
+            movies = [movie for movie in movies if is_similar(movie_rating, movie.movie_rating)]
+
+        total = len(movies)
         start = (page - 1) * size
         end = page * size
 
@@ -128,38 +136,9 @@ class MovieViewSet(ViewSet):
         tags=['movie']
     )
     def get_by_id(self, request, *args, **kwargs):
-        user = request.user
-        if not request.user.is_authenticated:
-            return Response(data={'error': 'Not authenticated'}, status=status.HTTP_401_UNAUTHORIZED)
-
-        movie = Movie.objects.filter(id=kwargs['pk']).first()
-        if movie is None:
-            return Response(data={'error': 'Movie not found'}, status=status.HTTP_404_NOT_FOUND)
-
-        is_premium = check_status(user, movie)
-        if is_premium.data == {'ok': True}:
-            comment = Comment.objects.filter(movie_id=movie)
-            comment_serializer = CommentSerializer(comment, many=True)
-            genres = movie.genres.all()
-            actors = movie.actors.all()
-            directors = movie.directors.all()
-
-            recommendation = Movie.objects.filter(
-                Q(genres__in=genres) | Q(actors__in=actors) | Q(directors__in=directors)
-            ).exclude(id=movie.id).distinct()[:5]
-
-            recommendation_serializer = MovieSerializer(recommendation, many=True)
-            return Response(
-                status=status.HTTP_200_OK,
-                data={
-                    'movie': MovieSerializer(movie).data,
-                    'comments': comment_serializer.data,
-                    'recommendation': recommendation_serializer.data
-                })
-        return Response(
-            status=status.HTTP_400_BAD_REQUEST,
-            data={'detail': 'This movie only for premium users'}
-        )
+        movie_id = kwargs.get('pk')
+        response = check_premium(request.user, movie_id)
+        return response
 
 
 class CommentViewSet(ViewSet):
@@ -307,11 +286,6 @@ class SavedViewSet(ViewSet):
                 data={'detail': 'Not authenticated'},
             )
         user = User.objects.filter(id=request.user.id).first()
-        if not user:
-            return Response(
-                status=status.HTTP_404_NOT_FOUND,
-                data={'detail': 'User not found'},
-            )
         movie = Movie.objects.filter(id=request.data['id']).first()
         if not movie:
             return Response(
@@ -362,7 +336,6 @@ class SavedViewSet(ViewSet):
         if not str(page).isdigit() or int(page) < 1:
             return Response(status=status.HTTP_400_BAD_REQUEST, data={'error': 'Page must be an positive integer'})
         if not str(size).isdigit() or int(size) < 1:
-
             return Response(status=status.HTTP_400_BAD_REQUEST, data={'error': 'Size must be an positive integer'})
         total = save.count()
         start = (page - 1) * size

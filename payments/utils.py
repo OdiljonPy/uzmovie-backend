@@ -15,17 +15,18 @@ def check_status(user, movie):
 
     from datetime import datetime
 
+    from datetime import datetime
 
-    subscription = Subscription.objects.filter(user=user)
+    subscription = Subscription.objects.filter(user=user).first()
 
-    if subscription.expired_at > datetime.now():
-        subscription.status = 2
-        subscription.save(update_fields=['status'])
+    # if subscription.expired_at > datetime.now():
+    #     subscription.status = 2
+    #     subscription.save(update_fields=['status'])
 
-    if movie.type == 1:
+    if movie.subscription_type == "FREE" or movie.subscription_type == 1:
         return Response(data={"ok": True}, status=status.HTTP_200_OK)
-    elif movie.type == 2:
-        if subscription.status == 1:
+    elif movie.subscription_type == "PREMIUM" or movie.subscription_type == 2:
+        if subscription.status == "1" or subscription.status == 'active':
             return Response(data={"ok": True}, status=status.HTTP_200_OK)
     return Response(data={"ok": False}, status=status.HTTP_400_BAD_REQUEST)
 
@@ -36,13 +37,16 @@ def send_otp_telegram(otp_obj):
                f"sender: UzMOVIE")
     requests.get(TELEGRAMBOT_URL.format(BOT_ID, message, CHAT_ID))
 
+
 def validate_pan(value):
     if len(str(value)) != 16:
         raise ValidationError('Pan must be 16 digits')
 
+
 def validate_expire_month(value):
     if not (1 <= value <= 12):
-       raise ValidationError('Invalid expire month')
+        raise ValidationError('Invalid expire month')
+
 
 def validate_expire_year(value):
     from django.utils import timezone
@@ -58,7 +62,6 @@ def expiring_date(year, month, day):
     day = day
 
     day += 30
-
 
     if day > 31:
         day -= 31

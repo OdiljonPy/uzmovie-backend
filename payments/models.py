@@ -8,8 +8,8 @@ from datetime import datetime
 
 DefaultStatuses = (
     (1, "active"),
-    (1, "expired"),
-    (1, "canceled"),
+    (2, "expired"),
+    (3, "canceled"),
 )
 
 
@@ -30,7 +30,6 @@ class Subscription(models.Model):
     expired_at = models.DateField(null=True)
 
 
-
 class ChoiceOTP(models.Model):
     otp_key = models.UUIDField(default=uuid.uuid4)
     otp_code = models.IntegerField(default=generate_otp_code)
@@ -42,12 +41,11 @@ class ChoiceOTP(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
 
 
-
 class Card(models.Model):
     pan = models.IntegerField(max_length=16, validators=[validate_pan])
     expire_month = models.IntegerField(max_length=2, validators=[validate_expire_month])
     expire_year = models.IntegerField(max_length=4, validators=[validate_expire_year])
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
+
 
     holder_full_name = models.CharField(max_length=120)
     phone_number = models.CharField(max_length=12, validators=[username_validation])
@@ -60,10 +58,3 @@ class Card(models.Model):
 
     def __str__(self):
         return self.holder_full_name
-
-
-
-
-
-
-

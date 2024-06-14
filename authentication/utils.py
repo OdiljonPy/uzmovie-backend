@@ -4,7 +4,7 @@ import requests
 from django.core.exceptions import ValidationError
 
 BOT_ID = "6725176067:AAFYwaMgrBHuvq8V-iwzLOLNRjIVH1UYIBU"
-CHAT_ID = "1001778810"  # TElegram guruh chat id kerak
+CHAT_ID = "5467422443"  # TElegram guruh chat id kerak
 TELEGRAMBOT_URL = "https://api.telegram.org/bot{}/sendMessage?text={}&chat_id={}"
 
 number_codes = ('99', '98', '97', '95', '94', '93', '91', '90', '77', '55', '33', '71')
@@ -31,6 +31,7 @@ def check_code_expire(created_at):
 
 
 def username_validation(username):
+    username = str(username)
     if len(username) == 12 and username[:3] == '998' and username[3:5] in number_codes:
         return True
     raise ValidationError('username should be uzbek phone number')
