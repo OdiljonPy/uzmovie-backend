@@ -51,19 +51,6 @@ class AboutViewSet(ViewSet):
     @swagger_auto_schema(
         operation_description="About us",
         operation_summary="About us",
-        manual_parameters=[
-            openapi.Parameter('for_advertise', type=openapi.TYPE_INTEGER, description='for_advertise',
-                              in_=openapi.IN_BODY),
-            openapi.Parameter('watch_movie', type=openapi.TYPE_INTEGER, description='watch_movie',
-                              in_=openapi.IN_BODY),
-            openapi.Parameter('movie_number', type=openapi.TYPE_STRING, description='movie_number',
-                              in_=openapi.IN_BODY),
-            openapi.Parameter('qr_image', type=openapi.TYPE_FILE, description='qr_image', in_=openapi.IN_BODY),
-            openapi.Parameter('phone_number', type=openapi.TYPE_STRING, description='phone_number',
-                              in_=openapi.IN_BODY),
-            openapi.Parameter('email', type=openapi.TYPE_STRING, description='email', in_=openapi.IN_BODY),
-            openapi.Parameter('location', type=openapi.TYPE_STRING, description='location', in_=openapi.IN_BODY)
-        ],
         responses={200: AboutSerializer()},
         tags=['contact']
     )

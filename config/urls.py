@@ -26,7 +26,7 @@ from django.conf.urls.static import static
 
 schema_view = get_schema_view(
     openapi.Info(
-        title="UzMovie",
+        title="UzMovie API",
 
         default_version='v1', ),
     public=True,
