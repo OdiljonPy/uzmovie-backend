@@ -68,7 +68,7 @@ class AboutViewSet(ViewSet):
         tags=['contact']
     )
     def about(self, request):
-        if not request.user.is_authenticated:
+        if request.user.is_authenticated:
             return Response(
                 data={'error': 'Not authenticated'},
                 status=status.HTTP_401_UNAUTHORIZED
