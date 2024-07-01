@@ -12,6 +12,10 @@ https://docs.djangoproject.com/en/5.0/ref/settings/
 
 from datetime import timedelta
 from pathlib import Path
+from dotenv import load_dotenv
+import os
+
+load_dotenv()
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -20,10 +24,11 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/5.0/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-fzgwc$zp*90(8g)7*tbwnm76xvkc4xv0$7ljfvf4b#+b@!@n&w'
+SECRET_KEY = os.getenv('DJANGO_SECRET_KEY', 'asdasdassgdfg')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+
+DEBUG = int(os.getenv('DEBUG', True))
 
 ALLOWED_HOSTS = ['*']
 
@@ -42,13 +47,15 @@ INSTALLED_APPS = [
     'rest_framework_simplejwt',
     'drf_yasg',
     # 'corsheaders',
+    'storages',
 
     # local apps
     'authentication',
     'base',
     'payments',
     'movie',
-    'telegram'
+    'telegram',
+
 ]
 
 MIDDLEWARE = [
@@ -126,7 +133,6 @@ USE_TZ = False
 STATIC_URL = 'static/'
 STATIC_ROOT = 'staticfiles'
 
-
 MEDIA_URL = 'media/'
 MEDIA_ROOT = 'media'
 
@@ -151,3 +157,18 @@ SIMPLE_JWT = {
 BOT_ID = "6725176067:AAFYwaMgrBHuvq8V-iwzLOLNRjIVH1UYIBU"
 CHAT_ID = "-1001853506087"
 TELEGRAM_API_URL = "https://api.telegram.org/bot{}/sendMessage?text={}&chat_id={}"
+
+AWS_ACCESS_KEY_ID = 'DO00X7KW2E8Q4EQGGRCW'
+AWS_SECRET_ACCESS_KEY = 'iRMinMjTiKzcY7ThShPihKgpcR9dSp6rIcBFyK+0evA'
+AWS_STORAGE_BUCKET_NAME = 'uzmovie'
+
+AWS_S3_ENDPOINT_URL = 'https://quloq.fra1.digitaloceanspaces.com'
+AWS_S3_CUSTOM_DOMAIN = 'quloq.fra1.digitaloceanspaces.com/' + AWS_STORAGE_BUCKET_NAME
+AWS_S3_OBJECT_PARAMETERS = {
+    'CacheControl': 'max-age=86400',
+    'ACL': 'public-read'
+}
+
+# Media files configuration
+DEFAULT_FILE_STORAGE = 'config.storage_backend.MediaStorage'
+
