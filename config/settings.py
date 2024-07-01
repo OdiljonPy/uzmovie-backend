@@ -41,6 +41,7 @@ INSTALLED_APPS = [
     'rest_framework',
     'rest_framework_simplejwt',
     'drf_yasg',
+    'modeltranslation',
     # 'corsheaders',
 
     # local apps
@@ -112,7 +113,19 @@ AUTH_PASSWORD_VALIDATORS = [
 # Internationalization
 # https://docs.djangoproject.com/en/5.0/topics/i18n/
 
-LANGUAGE_CODE = 'en-us'
+LANGUAGE_CODE = 'ru-ru'
+gettext = lambda x: x
+
+LANGUAGES = (
+    ('uz', gettext('Uzbek')),
+    ('ru', gettext('Russian'))
+)
+
+MODELTRANSLATION_DEFAULT_LANGUAGE = 'ru'
+MODELTRANSLATION_LANGUAGES = (
+    'uz', 'ru'
+)
+
 
 TIME_ZONE = 'Asia/Tashkent'
 
@@ -125,7 +138,6 @@ USE_TZ = False
 
 STATIC_URL = 'static/'
 STATIC_ROOT = 'staticfiles'
-
 
 MEDIA_URL = 'media/'
 MEDIA_ROOT = 'media'
