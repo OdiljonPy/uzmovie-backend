@@ -52,6 +52,7 @@ class Movie(models.Model):
     title = models.CharField(max_length=200)
     subscription_type = models.IntegerField(choices=MOVIE_SUBSCRIPTION_TYPE)
     movie_rating = models.FloatField(default=0)
+    rating_count = models.IntegerField(default=0)
     country = models.ForeignKey(Country, on_delete=models.CASCADE)
     description = models.TextField()
     release_date = models.PositiveIntegerField(default=0)
