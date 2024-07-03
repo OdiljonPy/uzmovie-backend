@@ -208,6 +208,8 @@ class CommentViewSet(ViewSet):
     )
     def comment_create(self, request, *args, **kwargs):
         movie = Movie.objects.filter(id=request.data['movie']).first()
+        user = request.user
+        
         if movie is None:
             return Response(
                 status=status.HTTP_404_NOT_FOUND,
@@ -222,16 +224,15 @@ class CommentViewSet(ViewSet):
         serializer = CommentSerializer(data=request.data)
 
         if serializer.is_valid():
-            serializer.validated_data['user'] = user
+            serializer.validated_data['author'] = user
             comment = Comment.objects.filter(user=user, movie=movie, rating__gt=0).first()
-            rate_comment = Comment.objects.filter(movie=movie, rating__gt=0)
 
             if comment is None:
                 serializer.save()
-                average = rate_comment.aggregate(Avg('rating'))['rating__avg']
-                average = round(average, 2)
-                movie.movie_rating = average
-                movie.save(update_fields=['movie_rating'])
+                movie_average_rating = movie.movie_rating * movie.rating_count + request.data['rating']
+                movie.rating_count += 1
+                movie.movie_rating = movie_average_rating / movie.rating_count
+                movie.save(update_fields=['movie_rating', 'rating_count'])
                 return Response(data=serializer.data, status=status.HTTP_201_CREATED)
 
             serializer.validated_data['rating'] = 0
@@ -258,6 +259,7 @@ class CommentViewSet(ViewSet):
             return Response(data={'error': 'Not authenticated'}, status=status.HTTP_401_UNAUTHORIZED)
 
         comment = Comment.objects.filter(id=kwargs['pk']).first()
+        movie = Movie.objects.filter(id=comment.movie_id).first()
 
         if comment is None:
             return Response(data={'error': 'Comment not found'}, status=status.HTTP_404_NOT_FOUND)
@@ -266,23 +268,22 @@ class CommentViewSet(ViewSet):
             return Response(
                 data={'error': 'You do not have permission to delete this comment'}, status=status.HTTP_400_BAD_REQUEST
             )
+
+        if comment.rating > 0:
+            movie_average_rating = movie.rating_count * movie.movie_rating - comment.rating
+            movie.rating_count -= 1
+            if movie_average_rating == 0 or movie.rating_count == 0:
+                movie.movie_rating = 0
+                movie.rating_count = 0
+                movie.save(update_fields=['movie_rating', 'rating_count'])
+                comment.delete()
+                return Response(data={'message': 'Successfully deleted'}, status=status.HTTP_200_OK)
+            movie.movie_rating = movie_average_rating / movie.rating_count
+            movie.save(update_fields=['movie_rating', 'rating_count'])
+            comment.delete()
+            return Response(data={'message': 'Successfully deleted'}, status=status.HTTP_200_OK)
+
         comment.delete()
-
-        movie = Movie.objects.filter(id=comment.movie.id).first()
-        if movie is None:
-            return Response(
-                status=status.HTTP_404_NOT_FOUND,
-                data={'message': 'Movie Not Found'}
-            )
-        rate_comment = Comment.objects.filter(movie=movie, rating__gt=0)
-        average = rate_comment.aggregate(Avg('rating'))['rating__avg']
-
-        if average is not None:
-            movie.overall_rating = average
-            movie.save(update_fields=['movie_rating'])
-
-        movie.overall_rating = 0
-        movie.save(update_fields=['movie_rating'])
         return Response(data={'message': 'Successfully deleted'}, status=status.HTTP_200_OK)
 
 
