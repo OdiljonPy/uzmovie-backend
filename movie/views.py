@@ -78,7 +78,7 @@ class MovieViewSet(ViewSet):
         else:
             movies = Movie.objects.all()
 
-        serializer = MovieSerializer(movies, many=True)
+        serializer = MovieSerializer(movies, many=True, context={'request': request})
         return Response(data=serializer.data, status=status.HTTP_200_OK)
 
     @swagger_auto_schema(

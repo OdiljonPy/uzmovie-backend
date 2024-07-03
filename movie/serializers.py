@@ -1,5 +1,6 @@
 from rest_framework import serializers
 from .models import Movie, Director, Comment, Saved, Genre, Country, Language
+from django.conf import settings
 
 
 class SearchSerializer(serializers.ModelSerializer):
@@ -59,6 +60,16 @@ class MovieSerializer(serializers.ModelSerializer):
 
     def to_representation(self, instance):
         data = super().to_representation(instance)
+
+        request = self.context.get("request")
+        lang = request.headers.get('Accept-Language', settings.MODELTRANSLATION_DEFAULT_LANGUAGE)
+
+        lang_options = settings.MODELTRANSLATION_LANGUAGES
+
+        if lang in lang_options:
+            data['title'] = getattr(instance, f'title_{lang}')
+            data['description'] = getattr(instance, f'description_{lang}')
+
         data['directors'] = {
             "id": instance.directors.id,
             "name": instance.directors.name

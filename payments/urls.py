@@ -4,7 +4,7 @@ from .views import BuySubscriptionViewSet, VerifyOTPViewSet, GetChoicesViewSet
 
 urlpatterns = [
     path('', GetChoicesViewSet.as_view({"get": 'choices'})),
-    path('info/', BuySubscriptionViewSet.as_view({"post": 'info'})),
+    path('buy/', BuySubscriptionViewSet.as_view({"post": 'info'})),
     path('verify/', VerifyOTPViewSet.as_view({"post": 'verify'}),),
 ]
 
