@@ -22,8 +22,7 @@ class GetChoicesViewSet(ViewSet):
         tags=['payment']
     )
     def choices(self, request, *args, **kwargs):
-        choices = Choice.objects.all()
-        serializer = ChoiceSerializer(choices, many=True)
+        serializer = ChoiceSerializer(Choice.objects.all(), many=True, context={'request': request})
 
         return Response(serializer.data, status=status.HTTP_200_OK)
 
