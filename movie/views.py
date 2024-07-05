@@ -215,7 +215,6 @@ class CommentViewSet(ViewSet):
                 status=status.HTTP_404_NOT_FOUND,
                 data={'message': 'Movie Not Found'}
             )
-        user = request.user
 
         if not request.user.is_authenticated:
             return Response(data={'error': 'Not authenticated'}, status=status.HTTP_401_UNAUTHORIZED)
